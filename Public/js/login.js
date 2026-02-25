@@ -13,7 +13,7 @@ document.querySelector(".btn").addEventListener("click", async () => {
 
   if (data.ok) {
     alert("Login correcto");
-    window.location.href = "/bienvenida";
+    window.location.href = "/bienvenidos";
   } else {
     alert(data.error);
   }

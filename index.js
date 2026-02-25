@@ -12,8 +12,8 @@ app.get('/', (req, res) => {
   res.sendFile(__dirname + '/Public/pages/index.html');
 });
 
-app.get('/bienvenida', (req, res) => {
-  res.sendFile(__dirname + '/Public/pages/bienvenida.html');
+app.get('/bienvenidos', (req, res) => {
+  res.sendFile(__dirname + '/Public/pages/Bienvenidos.html');
 });
 
 app.post('/login', (req, res) => {
