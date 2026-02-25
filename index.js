@@ -20,8 +20,8 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "Public/pages/index.html"));
 });
 
-app.get("/bienvenida", (req, res) => {
-  res.sendFile(path.join(__dirname, "Public/pages/bienvenida.html"));
+app.get("/bienvenidos", (req, res) => {
+  res.sendFile(path.join(__dirname, "Public/pages/Bienvenidos.html"));
 });
 
 app.get("/index", (req, res) => {
@@ -45,4 +45,7 @@ app.use("/auth", authRoutes);
 
 app.listen(port, () => {
   console.log(`Servidor corriendo en http://localhost:${port}`);
+});
+db.all("SELECT correo FROM administradores", [], (err, rows) => {
+  console.log("Admins:", rows);
 });
