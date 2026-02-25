@@ -170,3 +170,25 @@ body{
 .register a:hover{
   text-decoration: underline;
 }
+
+/* Botón principal iniciar sesión */
+.btn{
+  width: 100%;
+  height: 62px;
+
+  border: none;
+  border-radius: 10px;
+
+  font-size: 22px;
+  font-weight: 700;
+
+  background-color: var(--navy2); /* azul institucional */
+  color: var(--bone); /* blanco hueso */
+
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.btn:hover{
+  background-color: var(--navy1);
+}
