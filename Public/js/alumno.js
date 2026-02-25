@@ -1,36 +1,3 @@
-// ===============================
-// VALIDACIONES EN VIVO
-// ===============================
-
-// TELEFONO: solo números y máximo 10
-const tel = document.getElementById("telefono");
-if (tel) {
-  tel.addEventListener("input", () => {
-    tel.value = tel.value.replace(/\D/g, "").slice(0, 10);
-  });
-}
-
-// MATRICULA: 1 letra + 8 números
-const matriculaInput = document.getElementById("matricula");
-if (matriculaInput) {
-  matriculaInput.addEventListener("input", () => {
-    let val = matriculaInput.value.toUpperCase();
-
-    if (val.length > 0) {
-      val = val[0].replace(/[^A-Z]/g, "") + val.slice(1);
-    }
-
-    if (val.length > 1) {
-      val = val[0] + val.slice(1).replace(/\D/g, "");
-    }
-
-    matriculaInput.value = val.slice(0, 9);
-  });
-}
-
-// ===============================
-// SUBMIT FORMULARIO
-// ===============================
 const form = document.getElementById("formAlumno");
 
 if (form) {
@@ -46,21 +13,30 @@ if (form) {
     const matricula = document.getElementById("matricula").value.trim();
     const correo = document.getElementById("correo").value.trim();
     const telefono = document.getElementById("telefono").value.trim();
+    const password = document.getElementById("password").value;
+    const password2 = document.getElementById("password2").value;
 
-    // VALIDACIÓN FINAL
     const telRegex = /^[0-9]{10}$/;
     const matriculaRegex = /^[A-Za-z][0-9]{8}$/;
 
-    if (telefono && !telRegex.test(telefono)) {
-      alert("El teléfono debe tener 10 dígitos");
-      return;
-    }
+    // VALIDACIONES
+    if (!nombre1) return alert("Ingresa tu primer nombre");
+    if (!apellido_paterno) return alert("Ingresa apellido paterno");
+    if (!apellido_materno) return alert("Ingresa apellido materno");
 
-    if (!matriculaRegex.test(matricula)) {
-      alert("La matrícula debe tener 1 letra y 8 números");
-      return;
-    }
+    if (!matriculaRegex.test(matricula))
+      return alert("Matrícula inválida (Ej: A12345678)");
 
+    if (telefono && !telRegex.test(telefono))
+      return alert("Teléfono inválido");
+
+    if (password.length < 8)
+      return alert("La contraseña debe tener mínimo 8 caracteres");
+
+    if (password !== password2)
+      return alert("Las contraseñas no coinciden");
+
+    // ENVIO
     try {
       const res = await fetch("/api/alumnos", {
         method: "POST",
@@ -72,6 +48,7 @@ if (form) {
           matricula,
           correo,
           telefono,
+          password   // 👈 AHORA SI SE ENVÍA
         }),
       });
 
