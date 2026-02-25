@@ -55,6 +55,15 @@
         <label class="label" for="telefono">Número telefónico (opcional)</label>
         <input class="input" id="telefono" type="tel" placeholder="Ej. 9991234567" />
 
+        <!-- Contraseña -->
+        <label class="label" for="password">Crear contraseña</label>
+        <input class="input" id="password" type="password" placeholder="Crea una contraseña" />
+
+        <label class="label" for="password2">Confirmar contraseña</label>
+        <input class="input" id="password2" type="password" placeholder="Repite tu contraseña" />
+
+        <p class="help">Tu contraseña debe tener al menos 8 caracteres.</p>
+        
         <!-- Botones -->
         <div class="actions">
           <button class="btn" type="submit">Validar</button>
@@ -68,42 +77,6 @@
 
     </div>
   </div>
-<script>
-document.querySelector(".form").addEventListener("submit", async (e) => {
-  e.preventDefault();
-
-  const nombre1 = document.getElementById("nombre1").value.trim();
-  const nombre2 = document.getElementById("nombre2").value.trim();
-
-  const nombres = `${nombre1} ${nombre2}`.trim();
-
-  const data = {
-    nombres,
-    apellido_paterno: document.getElementById("apP").value.trim(),
-    apellido_materno: document.getElementById("apM").value.trim(),
-    matricula: document.getElementById("matricula").value.trim(),
-    correo: document.getElementById("correo").value.trim(),
-    telefono: document.getElementById("telefono").value.trim(),
-  };
-
-  try {
-    const res = await fetch("/api/alumnos", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-
-    const json = await res.json();
-
-    if (!res.ok) throw new Error(json.error);
-
-    alert("Alumno registrado correctamente");
-    window.location.href = "/index";
-
-  } catch (err) {
-    alert(err.message);
-  }
-});
-</script>
+<script src="/js/alumno.js"></script>
 </body>
 </html>
