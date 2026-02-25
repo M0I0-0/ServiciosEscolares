@@ -10,6 +10,10 @@ app.get('/', (req, res) => {
   res.sendFile(__dirname + '/Public/pages/index.html');
 });
 
+app.get('/bienvenida', (req, res) => {
+  res.sendFile(__dirname + '/Public/pages/bienvenida.html');
+});
+
 app.listen(port, () => {
   console.log(`Servidor corriendo en http://localhost:${port}`);
 });
