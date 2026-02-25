@@ -46,6 +46,3 @@ app.use("/auth", authRoutes);
 app.listen(port, () => {
   console.log(`Servidor corriendo en http://localhost:${port}`);
 });
-db.all("SELECT correo FROM administradores", [], (err, rows) => {
-  console.log("Admins:", rows);
-});
