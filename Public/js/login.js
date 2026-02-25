@@ -23,7 +23,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await res.json();
 
       if (data.ok) {
-        alert("Login correcto");
         window.location.href = "/bienvenidos";
       } else {
         alert(data.error || "Credenciales incorrectas");
