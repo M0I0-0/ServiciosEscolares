@@ -1,47 +1,47 @@
-const express = require('express');
-const path = require('path');
-const db = require('./DB/db');
+const express = require("express");
+const path = require("path");
+const db = require("./DB/db"); // conexión SQLite
 
 const app = express();
 const port = 3000;
 
+// ==========================
+// MIDDLEWARES
+// ==========================
+
+app.use(express.static(path.join(__dirname, "Public")));
+app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'Public')));
+// ==========================
+// RUTAS DE VISTAS (GET)
+// ==========================
 
-app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/Public/pages/index.html');
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "Public/pages/index.html"));
 });
 
-app.get('/Bienvenidos', (req, res) => {
-  res.sendFile(__dirname + '/Public/pages/Bienvenidos.html');
+app.get("/bienvenida", (req, res) => {
+  res.sendFile(path.join(__dirname, "Public/pages/bienvenida.html"));
 });
 
-app.get('/Nuevo_Usuario', (req, res) => {
-  res.sendFile(__dirname + '/Public/pages/Nuevo_Usuario.html');
+app.get("/index", (req, res) => {
+  res.sendFile(path.join(__dirname, "Public/pages/index.html"));
 });
 
-app.post('/login', (req, res) => {
-
-  const { correo, password } = req.body;
-
-  db.get("SELECT * FROM administradores WHERE correo = ?", [correo], (err, admin) => {
-    if (admin && admin.contrasena === password)
-      return res.json({ ok: true, rol: "admin" });
-
-    db.get("SELECT * FROM personal WHERE correo = ?", [correo], (err, personal) => {
-      if (personal && personal.contrasena === password)
-        return res.json({ ok: true, rol: "personal" });
-
-      db.get("SELECT * FROM alumnos WHERE correo = ?", [correo], (err, alumno) => {
-        if (alumno && alumno.contrasena === password)
-          return res.json({ ok: true, rol: "alumno" });
-
-        return res.json({ ok: false, error: "Usuario o contraseña incorrectos" });
-      });
-    });
-  });
-
+app.get("/recuperar_contrasena", (req, res) => {
+  res.sendFile(path.join(__dirname, "Public/pages/recuperar_contrasena.html"));
 });
+
+// ==========================
+// RUTAS DEL SISTEMA
+// ==========================
+
+const authRoutes = require("./routes/auth");
+app.use("/auth", authRoutes);
+
+// ==========================
+// INICIAR SERVIDOR
+// ==========================
 
 app.listen(port, () => {
   console.log(`Servidor corriendo en http://localhost:${port}`);
