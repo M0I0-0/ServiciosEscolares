@@ -110,3 +110,18 @@ button:hover {
   color: #6c7a8c;
   font-size: 14px;
 }
+.mensaje {
+  display: none;
+  margin: 12px 0 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.mensaje.ok {
+  display: block;
+  background: rgba(11, 61, 145, 0.12);
+  border: 1px solid rgba(11, 61, 145, 0.35);
+  color: #0b3d91;
+}

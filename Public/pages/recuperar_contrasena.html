@@ -42,5 +42,16 @@
         <p class="footer">© Servicios Escolares</p>
       </div>
     </div>
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const ok = params.get("ok");
+
+      if (ok === "1") {
+        const msg = document.getElementById("mensaje");
+        msg.textContent =
+          "Si el correo existe, te enviamos un enlace de recuperación. Revisa tu bandeja y SPAM.";
+        msg.classList.add("ok");
+      }
+    </script>
   </body>
 </html>

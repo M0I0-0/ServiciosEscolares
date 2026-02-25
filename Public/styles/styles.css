@@ -1,21 +1,23 @@
-:root{
+:root {
   --navy1: #062a59;
   --navy2: #0b3b7a;
-  --bone:  #f3efe6;
-  --text:  #0b2f5c;
+  --bone: #f3efe6;
+  --text: #0b2f5c;
   --muted: #6f8096;
-  --line:  rgba(11,47,92,0.18);
+  --line: rgba(11, 47, 92, 0.18);
 }
 
-*{ box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
-body{
+body {
   margin: 0;
   font-family: Arial, sans-serif;
 }
 
 /* Fondo azul marino (degradado) */
-.page{
+.page {
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -25,16 +27,16 @@ body{
 }
 
 /* Tarjeta central */
-.card{
+.card {
   width: 560px;
   max-width: 92vw;
   background: var(--bone);
   border-radius: 18px;
   padding: 40px 48px 18px;
-  box-shadow: 0 18px 45px rgba(0,0,0,0.28);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.28);
 }
 
-.logo-img{
+.logo-img {
   display: block;
   width: 120px;
   height: 120px;
@@ -43,17 +45,17 @@ body{
 }
 
 /* Cuadro del logo */
-.logo-box{
+.logo-box {
   width: 110px;
   height: 110px;
   margin: 0 auto 18px;
   border-radius: 10px;
-  border: 2px dashed rgba(120,140,165,0.75);
-  background: rgba(255,255,255,0.35);
+  border: 2px dashed rgba(120, 140, 165, 0.75);
+  background: rgba(255, 255, 255, 0.35);
 }
 
 /* Títulos */
-.title{
+.title {
   margin: 0;
   text-align: center;
   color: var(--text);
@@ -61,7 +63,7 @@ body{
   font-weight: 700;
 }
 
-.subtitle{
+.subtitle {
   margin: 10px 0 28px;
   text-align: center;
   color: var(--muted);
@@ -69,11 +71,11 @@ body{
 }
 
 /* Form */
-.form{
+.form {
   width: 100%;
 }
 
-.label{
+.label {
   display: block;
   margin: 18px 0 8px;
   font-weight: 700;
@@ -81,7 +83,7 @@ body{
   font-size: 18px;
 }
 
-.input{
+.input {
   width: 100%;
   height: 56px;
   border-radius: 4px;
@@ -92,12 +94,12 @@ body{
   outline: none;
 }
 
-.input::placeholder{
+.input::placeholder {
   color: #8d9db3;
 }
 
 /* Link recuperar */
-.recover{
+.recover {
   display: inline-block;
   margin: 16px 0 22px;
   color: var(--text);
@@ -106,7 +108,7 @@ body{
   font-size: 18px;
 }
 
-.register{
+.register {
   text-align: center;
   margin-top: 18px;
   font-size: 18px;
@@ -114,7 +116,7 @@ body{
 }
 
 /* Botón estilo secundario */
-.register-btn{
+.register-btn {
   display: inline-block;
   margin-left: 10px;
   padding: 10px 22px;
@@ -130,43 +132,59 @@ body{
   transition: all 0.2s ease;
 }
 
-.register-btn:hover{
+.register-btn:hover {
   background-color: var(--navy2);
   color: var(--bone);
 }
 
-.btn:active{
+.btn:active {
   transform: translateY(1px);
 }
 
 /* Línea divisoria y footer */
-.divider{
+.divider {
   margin: 24px -48px 10px;
   height: 2px;
-  background: rgba(20,40,70,0.15);
+  background: rgba(20, 40, 70, 0.15);
 }
 
-.footer{
+.footer {
   margin: 0;
   text-align: center;
-  color: rgba(70,85,110,0.85);
+  color: rgba(70, 85, 110, 0.85);
   font-size: 16px;
   padding-bottom: 6px;
 }
-.register{
+.register {
   text-align: center;
   margin-top: 12px;
   font-size: 18px;
   color: var(--text);
 }
 
-.register a{
+.register a {
   font-weight: 700;
   color: var(--navy2);
   text-decoration: none;
   margin-left: 5px;
 }
 
-.register a:hover{
+.register a:hover {
   text-decoration: underline;
+}
+
+.mensaje {
+  display: none;
+  margin: 12px 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.mensaje.ok {
+  display: block;
+  background: rgba(11, 61, 145, 0.12);
+  border: 1px solid rgba(11, 61, 145, 0.35);
+  color: #0b3d91;
 }
