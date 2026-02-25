@@ -1,0 +1,112 @@
+:root {
+  --navy1: #062a59;
+  --navy2: #0b3b7a;
+  --bone: #f3efe6;
+  --text: #0b2f5c;
+  --muted: #6f8096;
+  --line: rgba(11, 47, 92, 0.18);
+}
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  /* background-color: #0b2f5c; Azul marino sólido */
+  background: radial-gradient(circle at 50% 40%, var(--navy2), var(--navy1));
+}
+
+/* Centrar tarjeta */
+.contenedor {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Tarjeta principal */
+.card {
+  background-color: #f3efe6; /* Blanco hueso */
+  width: 450px;
+  padding: 40px;
+  border-radius: 20px;
+  text-align: center;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+}
+
+/* Logo */
+.logo {
+  width: 120px;
+  margin-bottom: 15px;
+}
+
+/* Título */
+h1 {
+  margin: 10px 0;
+  color: #0b2f5c;
+}
+
+/* Descripción */
+.descripcion {
+  color: #6c7a8c;
+  margin-bottom: 30px;
+}
+
+/* Label */
+label {
+  display: block;
+  text-align: left;
+  font-weight: bold;
+  margin-bottom: 8px;
+  color: #0b2f5c;
+}
+
+/* Input */
+input {
+  width: 100%;
+  height: 45px;
+  padding-left: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  margin-bottom: 20px;
+}
+
+/* Botón */
+button {
+  width: 100%;
+  height: 50px;
+  background-color: #0b2f5c;
+  color: white;
+  font-size: 18px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #12407a;
+}
+
+/* Link volver */
+.volver {
+  display: block;
+  margin-top: 20px;
+  color: #0b2f5c;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.volver:hover {
+  text-decoration: underline;
+}
+
+/* Línea divisoria */
+.linea {
+  height: 1px;
+  background-color: #ccc;
+  margin: 25px 0 10px 0;
+}
+
+/* Footer */
+.footer {
+  color: #6c7a8c;
+  font-size: 14px;
+}
