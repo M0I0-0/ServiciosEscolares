@@ -1,30 +1,47 @@
 const express = require("express");
 const path = require("path");
+const db = require("./DB/db"); // conexión SQLite
+
 const app = express();
 const port = 3000;
 
-app.use(express.static(path.join(__dirname, "Public")));
+// ==========================
+// MIDDLEWARES
+// ==========================
 
-// Esta es tu primera "ruta"
+app.use(express.static(path.join(__dirname, "Public")));
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+// ==========================
+// RUTAS DE VISTAS (GET)
+// ==========================
+
 app.get("/", (req, res) => {
-  res.sendFile(__dirname + "/Public/pages/index.html");
+  res.sendFile(path.join(__dirname, "Public/pages/index.html"));
 });
 
 app.get("/bienvenida", (req, res) => {
-  res.sendFile(__dirname + "/Public/pages/bienvenida.html");
+  res.sendFile(path.join(__dirname, "Public/pages/bienvenida.html"));
+});
+
+app.get("/index", (req, res) => {
+  res.sendFile(path.join(__dirname, "Public/pages/index.html"));
 });
 
 app.get("/recuperar_contrasena", (req, res) => {
-  res.sendFile(__dirname + "/Public/pages/recuperar_contrasena.html");
+  res.sendFile(path.join(__dirname, "Public/pages/recuperar_contrasena.html"));
 });
 
-app.get("/login", (req, res) => {
-  res.sendFile(__dirname + "/Public/pages/index.html");
-});
+// ==========================
+// RUTAS DEL SISTEMA
+// ==========================
 
-app.get("/login", (req, res) => {
-  res.sendFile(__dirname + "/Public/pages/index.html");
-});
+const authRoutes = require("./routes/auth");
+app.use("/auth", authRoutes);
+
+// ==========================
+// INICIAR SERVIDOR
+// ==========================
 
 app.listen(port, () => {
   console.log(`Servidor corriendo en http://localhost:${port}`);
