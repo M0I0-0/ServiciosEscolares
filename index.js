@@ -16,6 +16,10 @@ app.get('/bienvenidos', (req, res) => {
   res.sendFile(__dirname + '/Public/pages/Bienvenidos.html');
 });
 
+app.get('/Nuevo_Usuario', (req, res) => {
+  res.sendFile(__dirname + '/Public/pages/Nuevo_Usuario.html');
+});
+
 app.post('/login', (req, res) => {
 
   const { correo, password } = req.body;
