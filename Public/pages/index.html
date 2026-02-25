@@ -20,6 +20,9 @@
           Acceso para estudiantes, personal y administración
         </p>
 
+        <!-- ✅ Mensaje bonito -->
+        <div class="mensaje" id="mensaje" aria-live="polite"></div>
+
         <div class="form">
           <label class="label" for="usuario">Usuario</label>
           <input
@@ -41,7 +44,7 @@
             >¿Recuperar contraseña?</a
           >
 
-          <button type="button" class="btn">Iniciar sesión</button>    
+          <button type="button" class="btn">Iniciar sesión</button>
         </div>
 
         <div class="divider"></div>
@@ -49,11 +52,25 @@
         <p class="footer">© Servicios Escolares</p>
 
         <p class="register">
-          ¿Deseas inscribirte?
-          <a class="register-btn" href="/pages/Nuevo_Usuario.html">Registrarse</a>
+          <a href="/Bienvenidos">¿Deseas inscribirte?</a>
+          <!-- ✅ Ruta correcta -->
+          <a class="register-btn" href="/pages/Nuevo_Usuario.html"
+            >Registrarse</a
+          >
         </p>
       </div>
     </div>
+
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("reset") === "1") {
+        const msg = document.getElementById("mensaje");
+        msg.textContent =
+          "✅ Contraseña actualizada. Ya puedes iniciar sesión.";
+        msg.classList.add("ok");
+      }
+    </script>
+
     <script src="/js/login.js"></script>
   </body>
 </html>

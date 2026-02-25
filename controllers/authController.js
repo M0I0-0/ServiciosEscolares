@@ -87,9 +87,11 @@ exports.login = (req, res) => {
 // =====================================
 exports.forgotPassword = (req, res) => {
   const correo = (req.body.correo || "").trim().toLowerCase();
-  const mensaje = "Si el correo existe, te enviamos un enlace de recuperación.";
 
-  if (!correo) return res.send(mensaje);
+  // Siempre redirige a la pantalla bonita (sin revelar si existe)
+  const redirectOk = () => res.redirect("/recuperar_contrasena?ok=1");
+
+  if (!correo) return redirectOk();
 
   const queries = [
     "SELECT correo FROM administradores WHERE correo = ? LIMIT 1",
@@ -98,21 +100,21 @@ exports.forgotPassword = (req, res) => {
   ];
 
   const buscar = (i) => {
-    if (i >= queries.length) return res.send(mensaje);
+    if (i >= queries.length) return redirectOk();
 
     db.get(queries[i], [correo], (err, row) => {
       if (err) {
         console.error("DB error:", err);
-        return res.send(mensaje);
+        return redirectOk();
       }
 
-      if (row) return generarToken();
+      if (row) return generarTokenYEnviar();
 
-      buscar(i + 1);
+      return buscar(i + 1);
     });
   };
 
-  const generarToken = () => {
+  const generarTokenYEnviar = () => {
     const token = crypto.randomBytes(32).toString("hex");
     const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
     const expiresAt = Date.now() + 15 * 60 * 1000;
@@ -124,12 +126,10 @@ exports.forgotPassword = (req, res) => {
       async (err) => {
         if (err) {
           console.error("Insert error:", err);
-          return res.send(mensaje);
+          return redirectOk();
         }
 
         const link = `${BASE_URL}/auth/reset-password?token=${token}`;
-
-        console.log("📧 Intentando enviar correo a:", correo);
 
         try {
           await transporter.sendMail({
@@ -139,22 +139,17 @@ exports.forgotPassword = (req, res) => {
             html: `
               <h2>Recuperación de contraseña</h2>
               <p>Solicitaste restablecer tu contraseña.</p>
-              <p>
-                <a href="${link}" 
-                   style="background:#0b3d91;color:white;padding:10px 15px;text-decoration:none;border-radius:6px;">
-                   Restablecer contraseña
-                </a>
-              </p>
+              <p><a href="${link}">Restablecer contraseña</a></p>
               <p>Este enlace expira en 15 minutos.</p>
+              <p>Si no fuiste tú, ignora este correo.</p>
             `,
           });
-
-          console.log("✅ Correo enviado correctamente");
-          return res.send(mensaje);
-        } catch (error) {
-          console.error("❌ Error enviando correo:", error);
-          return res.send("Error enviando correo. Revisa consola.");
+          console.log("✅ Correo enviado a:", correo);
+        } catch (e) {
+          console.error("❌ Error enviando correo:", e);
         }
+
+        return redirectOk(); // SIEMPRE redirige
       },
     );
   };
@@ -166,8 +161,40 @@ exports.forgotPassword = (req, res) => {
 // MOSTRAR FORM RESET
 // =====================================
 exports.showResetForm = (req, res) => {
-  res.sendFile(
-    path.join(__dirname, "..", "Public", "pages", "reset_password.html"),
+  const token = (req.query.token || "").trim();
+  if (!token) {
+    return res.sendFile(
+      path.join(__dirname, "..", "Public", "pages", "token_invalido.html"),
+    );
+  }
+
+  const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+
+  db.get(
+    `SELECT id, expires_at, used
+     FROM password_resets
+     WHERE token_hash = ?
+     ORDER BY id DESC
+     LIMIT 1`,
+    [tokenHash],
+    (err, row) => {
+      if (err || !row) {
+        return res.sendFile(
+          path.join(__dirname, "..", "Public", "pages", "token_invalido.html"),
+        );
+      }
+
+      if (row.used === 1 || Date.now() > row.expires_at) {
+        return res.sendFile(
+          path.join(__dirname, "..", "Public", "pages", "token_invalido.html"),
+        );
+      }
+
+      // ✅ Token válido: mostrar formulario
+      return res.sendFile(
+        path.join(__dirname, "..", "Public", "pages", "reset_password.html"),
+      );
+    },
   );
 };
 
@@ -198,12 +225,12 @@ exports.resetPassword = (req, res) => {
       }
 
       if (!row) {
-        return res.status(400).send("Token inválido o ya usado.");
+        return res.redirect("/pages/token_invalido.html");
       }
 
       if (Date.now() > row.expires_at) {
         db.run("UPDATE password_resets SET used = 1 WHERE id = ?", [row.id]);
-        return res.status(400).send("Token expirado.");
+        return res.redirect("/pages/token_invalido.html");
       }
 
       const correo = row.correo;
@@ -229,9 +256,7 @@ exports.resetPassword = (req, res) => {
             db.run("UPDATE password_resets SET used = 1 WHERE id = ?", [
               row.id,
             ]);
-            return res.send(
-              "Contraseña actualizada. Ya puedes iniciar sesión.",
-            );
+            return res.redirect("/index?reset=1");
           }
 
           actualizar(i + 1);
