@@ -1,0 +1,67 @@
+:root{
+  --navy1: #062a59;
+  --navy2: #0b3b7a;
+  --bone:  #f3efe6;
+  --text:  #0b2f5c;
+  --muted: #6f8096;
+  --line:  rgba(11,47,92,0.18);
+}
+
+*{ box-sizing: border-box; }
+
+body{
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+/* MISMO FONDO QUE TU LOGIN */
+.page{
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 30px;
+  background: radial-gradient(circle at 50% 40%, var(--navy2), var(--navy1));
+}
+
+/* Contenedor para bajar el contenido */
+.content{
+  width: 100%;
+  max-width: 900px;
+  text-align: center;
+
+  /* Baja el bloque hacia abajo */
+  margin-top: 140px;
+}
+
+/* Bienvenidos grande + sombra gris */
+.welcome{
+  margin: 0 0 45px 0;
+  color: var(--bone);
+  font-size: 90px;
+  font-weight: 700;
+
+  /* sombra gris */
+  text-shadow: 0 6px 0 rgba(0,0,0,0.20);
+}
+
+/* Botón */
+.btn{
+  width: 420px;
+  max-width: 90vw;
+  height: 70px;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--bone);
+
+  background: linear-gradient(#0d3c7a, #0a2f60);
+  box-shadow: 0 12px 22px rgba(0,0,0,0.25);
+}
+
+.btn:active{
+  transform: translateY(1px);
+}
