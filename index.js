@@ -22,8 +22,8 @@ app.get("/login", (req, res) => {
   res.sendFile(__dirname + "/Public/pages/index.html");
 });
 
-app.get("/login", (req, res) => {
-  res.sendFile(__dirname + "/Public/pages/index.html");
+app.get("/Bienvenidos", (req, res) => {
+  res.sendFile(__dirname + "/Public/pages/Bienvenidos.html");
 });
 
 app.listen(port, () => {
