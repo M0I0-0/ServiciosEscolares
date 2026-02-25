@@ -14,7 +14,7 @@
       <h1 class="title">Crear usuario</h1>
       <p class="subtitle">Completa tus datos para registrarte en Servicios Escolares</p>
 
-      <form class="form">
+      <form class="form" id="formAlumno">
 
         <!-- Nombres (2) -->
         <div class="grid-2">
@@ -57,7 +57,7 @@
 
         <!-- Botones -->
         <div class="actions">
-          <button class="btn" type="button">Validar</button>
+          <button class="btn" type="submit">Validar</button>
           <a class="btn secondary" href="login.html">Regresar</a>
         </div>
 
@@ -68,6 +68,42 @@
 
     </div>
   </div>
+<script>
+document.querySelector(".form").addEventListener("submit", async (e) => {
+  e.preventDefault();
 
+  const nombre1 = document.getElementById("nombre1").value.trim();
+  const nombre2 = document.getElementById("nombre2").value.trim();
+
+  const nombres = `${nombre1} ${nombre2}`.trim();
+
+  const data = {
+    nombres,
+    apellido_paterno: document.getElementById("apP").value.trim(),
+    apellido_materno: document.getElementById("apM").value.trim(),
+    matricula: document.getElementById("matricula").value.trim(),
+    correo: document.getElementById("correo").value.trim(),
+    telefono: document.getElementById("telefono").value.trim(),
+  };
+
+  try {
+    const res = await fetch("/api/alumnos", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+
+    const json = await res.json();
+
+    if (!res.ok) throw new Error(json.error);
+
+    alert("Alumno registrado correctamente");
+    window.location.href = "/index";
+
+  } catch (err) {
+    alert(err.message);
+  }
+});
+</script>
 </body>
 </html>

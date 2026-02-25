@@ -39,6 +39,9 @@ app.get("/recuperar_contrasena", (req, res) => {
 const authRoutes = require("./routes/auth");
 app.use("/auth", authRoutes);
 
+const alumnosRoutes = require("./routes/alumnos");
+app.use("/api/alumnos", alumnosRoutes);
+
 // ==========================
 // INICIAR SERVIDOR
 // ==========================
