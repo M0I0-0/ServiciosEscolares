@@ -12,7 +12,7 @@ app.get('/', (req, res) => {
   res.sendFile(__dirname + '/Public/pages/index.html');
 });
 
-app.get('/bienvenidos', (req, res) => {
+app.get('/Bienvenidos', (req, res) => {
   res.sendFile(__dirname + '/Public/pages/Bienvenidos.html');
 });
 
