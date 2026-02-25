@@ -12,8 +12,22 @@ const transporter = nodemailer.createTransport({
   secure: true,
   auth: {
     user: "servicios.escolares.peto@gmail.com",
-    pass: "mumdpivnggzbgaib", // ⚠️ SIN ESPACIOS
+    pass: "shildntabctyxyeu",
   },
+  tls: {
+    rejectUnauthorized: false,
+  },
+  logger: true,
+  debug: true,
+});
+
+// Verifica conexión SMTP al iniciar
+transporter.verify((err) => {
+  if (err) {
+    console.error("❌ SMTP verify error:", err);
+  } else {
+    console.log("✅ SMTP listo para enviar correos");
+  }
 });
 
 const BASE_URL = "http://localhost:3000";
@@ -102,13 +116,13 @@ exports.forgotPassword = (req, res) => {
   const generarToken = () => {
     const token = crypto.randomBytes(32).toString("hex");
     const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
-    const expiresAt = Date.now() + 15 * 60 * 1000; // 15 minutos
+    const expiresAt = Date.now() + 15 * 60 * 1000;
 
     db.run(
       `INSERT INTO password_resets (correo, token_hash, expires_at, used)
        VALUES (?, ?, ?, 0)`,
       [correo, tokenHash, expiresAt],
-      (err) => {
+      async (err) => {
         if (err) {
           console.error("Insert error:", err);
           return res.send(mensaje);
@@ -116,8 +130,10 @@ exports.forgotPassword = (req, res) => {
 
         const link = `${BASE_URL}/auth/reset-password?token=${token}`;
 
-        transporter
-          .sendMail({
+        console.log("📧 Intentando enviar correo a:", correo);
+
+        try {
+          await transporter.sendMail({
             from: '"Servicios Escolares" <servicios.escolares.peto@gmail.com>',
             to: correo,
             subject: "Recuperación de contraseña",
@@ -126,19 +142,20 @@ exports.forgotPassword = (req, res) => {
               <p>Solicitaste restablecer tu contraseña.</p>
               <p>
                 <a href="${link}" 
-                   style="background:#0b3d91;color:white;padding:10px 15px;text-decoration:none;border-radius:5px;">
+                   style="background:#0b3d91;color:white;padding:10px 15px;text-decoration:none;border-radius:6px;">
                    Restablecer contraseña
                 </a>
               </p>
               <p>Este enlace expira en 15 minutos.</p>
-              <p>Si no fuiste tú, ignora este correo.</p>
             `,
-          })
-          .then(() => res.send(mensaje))
-          .catch((e) => {
-            console.error("Error enviando correo:", e);
-            res.send(mensaje);
           });
+
+          console.log("✅ Correo enviado correctamente");
+          return res.send(mensaje);
+        } catch (error) {
+          console.error("❌ Error enviando correo:", error);
+          return res.send("Error enviando correo. Revisa consola.");
+        }
       },
     );
   };
@@ -169,7 +186,7 @@ exports.resetPassword = (req, res) => {
   const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
 
   db.get(
-    `SELECT id, correo, expires_at, used
+    `SELECT id, correo, expires_at
      FROM password_resets
      WHERE token_hash = ? AND used = 0
      ORDER BY id DESC
@@ -213,7 +230,6 @@ exports.resetPassword = (req, res) => {
             db.run("UPDATE password_resets SET used = 1 WHERE id = ?", [
               row.id,
             ]);
-
             return res.send(
               "Contraseña actualizada. Ya puedes iniciar sesión.",
             );
