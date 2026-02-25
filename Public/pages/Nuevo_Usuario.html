@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Servicios Escolares | Crear usuario</title>
+  <link rel="stylesheet" href="/styles/registro.css" />
+</head>
+<body>
+
+  <div class="page">
+    <div class="card">
+
+      <h1 class="title">Crear usuario</h1>
+      <p class="subtitle">Completa tus datos para registrarte en Servicios Escolares</p>
+
+      <form class="form">
+
+        <!-- Nombres (2) -->
+        <div class="grid-2">
+          <div>
+            <label class="label" for="nombre1">Primer nombre</label>
+            <input class="input" id="nombre1" type="text" placeholder="Ej. Juan" />
+          </div>
+
+          <div>
+            <label class="label" for="nombre2">Segundo nombre</label>
+            <input class="input" id="nombre2" type="text" placeholder="Ej. Carlos (opcional)" />
+          </div>
+        </div>
+
+        <!-- Apellidos -->
+        <div class="grid-2">
+          <div>
+            <label class="label" for="apP">Apellido paterno</label>
+            <input class="input" id="apP" type="text" placeholder="Ej. Pérez" />
+          </div>
+
+          <div>
+            <label class="label" for="apM">Apellido materno</label>
+            <input class="input" id="apM" type="text" placeholder="Ej. Gómez" />
+          </div>
+        </div>
+
+        <!-- Matrícula -->
+        <label class="label" for="matricula">Matrícula</label>
+        <input class="input" id="matricula" type="text" placeholder="Ej. A12345678" />
+        <p class="help">Inicia con 1 letra y después 8 números (ej. A12345678).</p>
+
+        <!-- Correo -->
+        <label class="label" for="correo">Correo electrónico</label>
+        <input class="input" id="correo" type="email" placeholder="tucorreo@escuela.edu.mx" />
+
+        <!-- Teléfono (opcional) -->
+        <label class="label" for="telefono">Número telefónico (opcional)</label>
+        <input class="input" id="telefono" type="tel" placeholder="Ej. 9991234567" />
+
+        <!-- Botones -->
+        <div class="actions">
+          <button class="btn" type="button">Validar</button>
+          <a class="btn secondary" href="login.html">Regresar</a>
+        </div>
+
+      </form>
+
+      <div class="divider"></div>
+      <p class="footer">© Servicios Escolares</p>
+
+    </div>
+  </div>
+
+</body>
+</html>
