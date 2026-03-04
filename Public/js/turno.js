@@ -6,6 +6,14 @@ const tipo = (params.get("tipo") || "").trim();
 const folio = (params.get("folio") || "").trim();
 
 // ===============================
+// Back URL según tipo/origen
+// ===============================
+// Si el "tipo" contiene "inscrip" => volver a bienvenidos_inscripcion
+// En caso contrario => volver a form_tramites
+const isInscripcion = tipo.toLowerCase().includes("inscrip");
+const backUrl = isInscripcion ? "/bienvenidos_inscripcion" : "/form_tramites";
+
+// ===============================
 // DOM
 // ===============================
 const $contador = document.getElementById("contador");
@@ -57,7 +65,7 @@ const setButtonMode = (mode) => {
 
   if (mode === "back") {
     $btn.textContent = "Volver a selección de trámite";
-    $btn.onclick = () => (window.location.href = "/form_tramites");
+    $btn.onclick = () => (window.location.href = backUrl);
     return;
   }
 
