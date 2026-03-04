@@ -10,11 +10,7 @@
   },
   "constancia": {
     "titulo": "Constancia de estudios",
-    "documentos": [
-      "Credencial escolar",
-      "CURP",
-      "Comprobante de pago"
-    ]
+    "documentos": ["Credencial escolar", "CURP", "Comprobante de pago"]
   },
   "historial": {
     "titulo": "Historial académico",
@@ -26,10 +22,17 @@
   },
   "certificados": {
     "titulo": "Certificados",
+    "documentos": ["Acta de nacimiento", "CURP", "Fotografías tamaño infantil"]
+  },
+  "bajas": {
+    "titulo": "Bajas",
     "documentos": [
-      "Acta de nacimiento",
-      "CURP",
-      "Fotografías tamaño infantil"
+      "Formato de solicitud de baja temporal o definitiva",
+      "Firma de no adeudo en finanzas"
     ]
+  },
+  "cambios-carrera": {
+    "titulo": "Cambios de carrera",
+    "documentos": ["Oficio"]
   }
 }
