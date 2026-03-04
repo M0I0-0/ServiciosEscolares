@@ -31,6 +31,10 @@ app.get("/form_tramites", (req, res) => {
   res.sendFile(path.join(__dirname, "Public/pages/form_tramites.html"));
 });
 
+app.get("/visualizar_personal", (req, res) => {
+  res.sendFile(path.join(__dirname, "Public/pages/visualizar_personal.html"));
+});
+
 // ✅ TURNO: si viene sin folio pero con tipo => crea turno y redirige con folio
 const turnosController = require("./controllers/turnosController");
 
