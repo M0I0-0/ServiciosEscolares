@@ -23,6 +23,10 @@ app.get("/Bienvenidos", (req, res) => {
   res.sendFile(path.join(__dirname, "Public/pages/Bienvenidos.html"));
 });
 
+app.get("/Bienvenidos_inscripcion", (req, res) => {
+  res.sendFile(path.join(__dirname, "Public/pages/Bienvenidos_inscripcion.html"));
+});
+
 app.get("/recuperar_contrasena", (req, res) => {
   res.sendFile(path.join(__dirname, "Public/pages/recuperar_contrasena.html"));
 });
