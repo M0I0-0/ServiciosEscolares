@@ -1,0 +1,35 @@
+{
+  "reinscripciones": {
+    "titulo": "Reinscripciones",
+    "documentos": [
+      "Comprobante de pago",
+      "Credencial escolar",
+      "CURP",
+      "Formato de reinscripción"
+    ]
+  },
+  "constancia": {
+    "titulo": "Constancia de estudios",
+    "documentos": [
+      "Credencial escolar",
+      "CURP",
+      "Comprobante de pago"
+    ]
+  },
+  "historial": {
+    "titulo": "Historial académico",
+    "documentos": [
+      "Credencial escolar",
+      "Identificación oficial",
+      "Comprobante de pago"
+    ]
+  },
+  "certificados": {
+    "titulo": "Certificados",
+    "documentos": [
+      "Acta de nacimiento",
+      "CURP",
+      "Fotografías tamaño infantil"
+    ]
+  }
+}
