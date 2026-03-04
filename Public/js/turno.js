@@ -12,7 +12,7 @@ const $contador = document.getElementById("contador");
 const $turno = document.getElementById("turno-actual");
 const $p1 = document.getElementById("proximo-1");
 const $p2 = document.getElementById("proximo-2");
-const $btnCancelar = document.getElementById("btn-cancelar");
+const $btn = document.getElementById("btn-cancelar");
 
 const $titulo = document.getElementById("titulo");
 const $lista = document.getElementById("lista-documentos");
@@ -44,10 +44,41 @@ const stopTimers = () => {
 };
 
 // ===============================
+// UI helpers
+// ===============================
+const pintarProximos = (arr) => {
+  setText($p1, arr?.[0] || "—");
+  setText($p2, arr?.[1] || "—");
+};
+
+// Botón en 2 modos
+const setButtonMode = (mode) => {
+  if (!$btn) return;
+
+  if (mode === "back") {
+    $btn.textContent = "Volver a selección de trámite";
+    $btn.onclick = () => (window.location.href = "/form_tramites");
+    return;
+  }
+
+  // mode === "cancel"
+  $btn.textContent = "Cancelar";
+  $btn.onclick = cancelarTurno;
+};
+
+// UI bonita de cancelado
+const mostrarCancelado = () => {
+  stopTimers();
+  setText($contador, "CANCELADO");
+  setText($turno, folio || "—");
+  pintarProximos([]);
+  setButtonMode("back");
+};
+
+// ===============================
 // DOCUMENTOS (tu parte original)
 // ===============================
 const cargarDocs = () => {
-  // Si no hay tipo, no hay docs
   if (!$titulo || !$lista) return;
 
   if (!tipo) {
@@ -92,12 +123,29 @@ const cargarDocs = () => {
 };
 
 // ===============================
-// UI: próximos turnos ADELANTE
+// Cancelar (normal)
 // ===============================
-const pintarProximos = (arr) => {
-  setText($p1, arr?.[0] || "—");
-  setText($p2, arr?.[1] || "—");
-};
+async function cancelarTurno() {
+  if (!folio) return;
+
+  try {
+    const r = await fetch("/turnos/cancelar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ folio }),
+    });
+    const data = await r.json();
+
+    if (data && data.ok) {
+      mostrarCancelado();
+    } else {
+      // si algo falla, mínimo avisamos en contador
+      setText($contador, "ERROR");
+    }
+  } catch (e) {
+    setText($contador, "ERROR");
+  }
+}
 
 // ===============================
 // Estado del turno desde backend
@@ -109,6 +157,7 @@ const refrescarEstado = async () => {
     setText($turno, "—");
     setText($contador, "—");
     pintarProximos([]);
+    setButtonMode("back"); // sin folio, vuelve
     return;
   }
 
@@ -123,26 +172,26 @@ const refrescarEstado = async () => {
     if (!data.ok) {
       setText($contador, "—");
       pintarProximos([]);
+      setButtonMode("back");
       return;
     }
 
     // Próximos ADELANTE (antes que tú)
     pintarProximos(data.proximos_adelante || []);
 
-    // Si ya cancelado
+    // Si cancelado
     if (data.miTurno.estado === "CANCELADO") {
-      stopTimers();
-      setText($contador, "CANCELADO");
-      setText($turno, `${folio} (CANCELADO)`);
+      mostrarCancelado();
       return;
     }
 
-    // Si ya es tu turno: contador real 3:00
+    // Si es tu turno (3:00 real)
     if (data.miTurno.estado === "EN_ATENCION") {
+      setButtonMode("cancel"); // puede cancelar durante atención también
+
       const restante =
         typeof data.restanteSeg === "number" ? data.restanteSeg : 180;
 
-      // Si ya está corriendo, no lo reinicies
       if (countdownInterval) return;
 
       let seg = restante;
@@ -156,17 +205,14 @@ const refrescarEstado = async () => {
           clearInterval(countdownInterval);
           countdownInterval = null;
 
-          // Al llegar a 0: CANCELADO + pasa al siguiente
+          // al llegar a 0: cancelar + pasar al siguiente
           await fetch("/turnos/tick", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ tramite: data.miTurno.tramite }),
           });
 
-          setText($contador, "CANCELADO");
-          setText($turno, `${folio} (CANCELADO)`);
-
-          // Reconsulta para recalcular todo (por si cambia algo en cola)
+          mostrarCancelado();
           setTimeout(refrescarEstado, 1000);
         }
       }, 1000);
@@ -174,12 +220,12 @@ const refrescarEstado = async () => {
       return;
     }
 
-    // Si está en espera: mostrar estimado (15 min por turno delante, backend ya lo manda)
+    // EN_ESPERA: estimado (15 min por turno delante)
+    setButtonMode("cancel");
     const estimado =
       typeof data.estimadoSeg === "number" ? data.estimadoSeg : 0;
     setText($contador, fmt(estimado));
 
-    // refresco cada 10s para actualizar estimado y próximos
     if (!refreshInterval) {
       refreshInterval = setInterval(refrescarEstado, 10000);
     }
@@ -189,28 +235,8 @@ const refrescarEstado = async () => {
 };
 
 // ===============================
-// Botón Cancelar
-// ===============================
-$btnCancelar?.addEventListener("click", async () => {
-  if (!folio) return;
-
-  try {
-    await fetch("/turnos/cancelar", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ folio }),
-    });
-
-    stopTimers();
-    setText($contador, "CANCELADO");
-    setText($turno, `${folio} (CANCELADO)`);
-  } catch (e) {
-    // si falla, no rompemos UI
-  }
-});
-
-// ===============================
 // Init
 // ===============================
 cargarDocs();
+setButtonMode("cancel"); // modo inicial por si todo va bien
 refrescarEstado();
