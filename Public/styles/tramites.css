@@ -7,14 +7,16 @@
   --line:  rgba(11,47,92,0.18);
 }
 
-*{ box-sizing: border-box; }
+*{
+  box-sizing: border-box;
+}
 
 body{
   margin: 0;
   font-family: Arial, sans-serif;
 }
 
-/* MISMO FONDO QUE TU LOGIN */
+/* Fondo */
 .page{
   min-height: 100vh;
   display: flex;
@@ -30,37 +32,55 @@ body{
   width: 100%;
   max-width: 900px;
   text-align: center;
-  margin-top: 140px;
+  margin-top: 80px;
 }
 
-/* Bienvenidos */
-.welcome{
-  margin: 0 0 45px 0;
+/* Pregunta */
+.question{
+  margin: 0 0 50px 0;
   color: var(--bone);
-  font-size: 90px;
+  font-size: 60px;
   font-weight: 700;
   text-shadow: 0 6px 0 rgba(0,0,0,0.20);
 }
 
-/* BOTON GENERAR TURNO */
-.btn{
-  width: 420px;
-  max-width: 90vw;
-  height: 70px;
-  border: none;
-  border-radius: 24px;
-  cursor: pointer;
-  padding: 12px 26px;
+/* GRID BOTONES 3x2 */
+.grid{
+  display: grid;
+  grid-template-columns: repeat(3, 220px);
+  justify-content: center;
+  gap: 22px;
+}
 
-  font-size: 36px;
+/* BOTONES */
+.btn-t{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  height: 70px;
+
+  border-radius: 14px;
+  text-decoration: none;
+  cursor: pointer;
+
+  font-size: 19px;
   font-weight: 700;
   color: white;
 
-  background: linear-gradient(#2ecc71,#27ae60);
-  box-shadow: 0 22px 22px rgba(0,0,0,0.25);
+  background: #8c97a6;
+
+  box-shadow: 0 12px 22px rgba(0,0,0,0.25);
+  transition: all 0.25s ease;
 }
 
-.btn:active{
+/* Hover verde */
+.btn-t:hover{
+  background: #27ae60;
+  transform: translateY(-2px);
+}
+
+.btn-t:active{
   transform: translateY(1px);
 }
 
@@ -71,19 +91,42 @@ body{
   left: 25px;
 
   padding: 12px 26px;
-  border: none;
   border-radius: 10px;
 
   font-size: 18px;
   font-weight: 700;
   color: white;
+  text-decoration: none;
 
   background: #e74c3c;
-  cursor: pointer;
-
   box-shadow: 0 8px 16px rgba(0,0,0,0.25);
 }
 
 .btn-back:hover{
   background: #c0392b;
+}
+
+/* RESPONSIVE */
+@media (max-width: 800px){
+
+  .grid{
+    grid-template-columns: repeat(2, 200px);
+  }
+
+}
+
+@media (max-width: 500px){
+
+  .grid{
+    grid-template-columns: 1fr;
+  }
+
+  .btn-t{
+    width: 100%;
+  }
+
+  .question{
+    font-size: 36px;
+  }
+
 }

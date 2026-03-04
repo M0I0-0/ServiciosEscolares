@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Servicios Escolares | Visualizar turno</title>
+    <link rel="stylesheet" href="/styles/turno.css" />
+  </head>
+  <body>
+    <main class="page">
+      <section class="card" aria-label="Visualización de turno">
+
+        <!-- BLOQUE SUPERIOR -->
+        <div class="top">
+
+          <!-- Contador (arriba izquierda) -->
+          <div class="counter" aria-label="Tiempo restante">
+            <div class="counter-icon" aria-hidden="true">🕒</div>
+            <div class="counter-content">
+              <!-- VACÍO: aquí va el tiempo (ej. 05:00) -->
+              <div class="counter-time" id="contador"></div>
+              <div class="counter-label">Tiempo restante</div>
+            </div>
+          </div>
+
+          <!-- Próximos turnos (arriba derecha) -->
+          <div class="next" aria-label="Próximos turnos">
+            <div class="next-header">
+              <span class="next-icon" aria-hidden="true">🔔</span>
+              <span class="next-title">Próximos turnos</span>
+            </div>
+
+            <div class="next-list">
+              <!-- VACÍO: máximo 2 turnos -->
+              <div class="next-item" id="proximo-1"></div>
+              <div class="next-item" id="proximo-2"></div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- BLOQUE INFERIOR -->
+        <div class="bottom" aria-label="Turno actual y acciones">
+          <div class="bottom-header">Turno actual</div>
+
+          <!-- VACÍO: aquí va el turno actual (ej. A152) -->
+          <div class="current-turn" id="turno-actual"></div>
+
+          <button class="btn-cancel" type="button" id="btn-cancelar">
+            Cancelar
+          </button>
+        </div>
+
+        <footer class="footer">© Servicios Escolares</footer>
+      </section>
+    </main>
+  </body>
+</html>

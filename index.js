@@ -24,12 +24,17 @@ app.get("/bienvenidos", (req, res) => {
   res.sendFile(path.join(__dirname, "Public/pages/Bienvenidos.html"));
 });
 
-app.get("/index", (req, res) => {
-  res.sendFile(path.join(__dirname, "Public/pages/index.html"));
-});
 
 app.get("/recuperar_contrasena", (req, res) => {
   res.sendFile(path.join(__dirname, "Public/pages/recuperar_contrasena.html"));
+});
+
+app.get("/turno", (req, res) => {
+  res.sendFile(path.join(__dirname, "Public/pages/turno.html"));
+});
+
+app.get("/form_tramites", (req, res) => {
+  res.sendFile(path.join(__dirname, "Public/pages/form_tramites.html"));
 });
 
 // ==========================
