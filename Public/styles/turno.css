@@ -291,3 +291,16 @@ body {
 .docs-list {
   padding-left: 0;
 }
+/* FIX RÁPIDO: cuando el contador dice "CANCELADO" no debe romper el layout */
+.counter,
+.counter-content {
+  min-width: 0; /* permite que se encoja dentro del grid */
+}
+
+.counter-time {
+  white-space: nowrap; /* no se parte en 2 líneas */
+  overflow: hidden; /* oculta lo que sobra */
+  text-overflow: ellipsis; /* si no cabe, pone ... */
+  font-size: 38px; /* un poco más chico para textos largos */
+  letter-spacing: 1px;
+}
