@@ -39,6 +39,10 @@
 
   "certificados": {
     "titulo": "Certificados",
+    "documentos": ["Acta de nacimiento", "CURP", "Fotografías tamaño infantil"]
+  },
+  "bajas": {
+    "titulo": "Bajas",
     "documentos": [
       "Historial académico",
       "Comprobante de pago",
@@ -61,5 +65,9 @@
       "Historial académico actualizado",
       "Validación de materias revalidadas"
     ]
+  },
+  "cambios-carrera": {
+    "titulo": "Cambios de carrera",
+    "documentos": ["Oficio"]
   }
 }
