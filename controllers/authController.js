@@ -47,6 +47,9 @@ db.run(`
 // =====================================
 // LOGIN
 // =====================================
+// =====================================
+// LOGIN (con rol)
+// =====================================
 exports.login = (req, res) => {
   const { correo, password } = req.body;
 
@@ -54,28 +57,44 @@ exports.login = (req, res) => {
     return res.json({ ok: false, error: "Faltan datos" });
   }
 
-  const queries = [
-    "SELECT correo, contrasena FROM administradores WHERE correo = ? LIMIT 1",
-    "SELECT correo, contrasena FROM personal WHERE correo = ? LIMIT 1",
-    "SELECT correo, contrasena FROM alumnos WHERE correo = ? LIMIT 1",
+  const checks = [
+    {
+      rol: "admin",
+      sql: "SELECT correo, contrasena FROM administradores WHERE correo = ? LIMIT 1",
+    },
+    {
+      rol: "personal",
+      sql: "SELECT correo, contrasena FROM personal WHERE correo = ? LIMIT 1",
+    },
+    {
+      rol: "alumno",
+      sql: "SELECT correo, contrasena FROM alumnos WHERE correo = ? LIMIT 1",
+    },
   ];
 
   const buscar = (i) => {
-    if (i >= queries.length) {
+    if (i >= checks.length) {
       return res.json({ ok: false, error: "Credenciales incorrectas" });
     }
 
-    db.get(queries[i], [correo], (err, row) => {
+    const { rol, sql } = checks[i];
+
+    db.get(sql, [correo], (err, row) => {
       if (err) {
         console.error("DB error:", err);
         return res.json({ ok: false, error: "Error del servidor" });
       }
 
-      if (row && row.contrasena === password) {
-        return res.json({ ok: true });
+      // no existe en esta tabla -> seguir buscando
+      if (!row) return buscar(i + 1);
+
+      // existe pero contraseña incorrecta
+      if (row.contrasena !== password) {
+        return res.json({ ok: false, error: "Credenciales incorrectas" });
       }
 
-      buscar(i + 1);
+      // ✅ login correcto + rol
+      return res.json({ ok: true, rol });
     });
   };
 

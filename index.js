@@ -24,7 +24,9 @@ app.get("/Bienvenidos", (req, res) => {
 });
 
 app.get("/Bienvenidos_inscripcion", (req, res) => {
-  res.sendFile(path.join(__dirname, "Public/pages/Bienvenidos_inscripcion.html"));
+  res.sendFile(
+    path.join(__dirname, "Public/pages/Bienvenidos_inscripcion.html"),
+  );
 });
 
 app.get("/recuperar_contrasena", (req, res) => {
@@ -33,6 +35,14 @@ app.get("/recuperar_contrasena", (req, res) => {
 
 app.get("/form_tramites", (req, res) => {
   res.sendFile(path.join(__dirname, "Public/pages/form_tramites.html"));
+});
+
+app.get("/panel_personal", (req, res) => {
+  res.send("Panel Personal (pendiente)");
+});
+
+app.get("/panel_admin", (req, res) => {
+  res.send("Panel Admin (pendiente)");
 });
 
 // ✅ TURNO: si viene sin folio pero con tipo => crea turno y redirige con folio
