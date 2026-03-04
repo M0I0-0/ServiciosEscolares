@@ -1,6 +1,6 @@
 const express = require("express");
 const path = require("path");
-const db = require("./DB/db"); // conexión SQLite
+// const db = require("./DB/db"); // opcional: si solo lo quieres por el log de conexión
 
 const app = express();
 const port = 3000;
@@ -12,6 +12,9 @@ app.use(express.static(path.join(__dirname, "Public")));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
+// Controllers
+const turnosController = require("./controllers/turnosController");
+
 // ==========================
 // RUTAS DE VISTAS (GET)
 // ==========================
@@ -19,9 +22,12 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "Public/pages/index.html"));
 });
 
+// ✅ Ruta “canónica”
 app.get("/Bienvenidos", (req, res) => {
   res.sendFile(path.join(__dirname, "Public/pages/Bienvenidos.html"));
 });
+// ✅ Alias (por si quedó en mayúsculas en algún link)
+app.get("/Bienvenidos", (req, res) => res.redirect("/bienvenidos"));
 
 app.get("/Bienvenidos_inscripcion", (req, res) => {
   res.sendFile(
@@ -38,31 +44,26 @@ app.get("/form_tramites", (req, res) => {
 });
 
 app.get("/panel_personal", (req, res) => {
-  res.send("Panel Personal (pendiente)");
+  res.sendFile(path.join(__dirname, "Public/pages/visualizar_personal.html"));
 });
 
 app.get("/panel_admin", (req, res) => {
   res.send("Panel Admin (pendiente)");
 });
 
-// ✅ TURNO: si viene sin folio pero con tipo => crea turno y redirige con folio
-const turnosController = require("./controllers/turnosController");
-
+// ✅ TURNO: crea turno si viene ?tipo= y no viene folio
 app.get("/turno", (req, res) => {
   const tipo = (req.query.tipo || "").trim();
   const folio = (req.query.folio || "").trim();
 
-  // Si ya trae folio, solo mostrar la página
   if (folio) {
     return res.sendFile(path.join(__dirname, "Public/pages/turno.html"));
   }
 
-  // Si no hay tipo, mandarlo a seleccionar trámite
   if (!tipo) {
     return res.redirect("/form_tramites");
   }
 
-  // Crear turno y redirigir con folio
   const fakeReq = { body: { tramite: tipo } };
   const fakeRes = {
     status: (code) => ({
@@ -71,9 +72,7 @@ app.get("/turno", (req, res) => {
     json: (obj) => {
       if (obj && obj.ok && obj.folio) {
         return res.redirect(
-          `/turno?tipo=${encodeURIComponent(tipo)}&folio=${encodeURIComponent(
-            obj.folio,
-          )}`,
+          `/turno?tipo=${encodeURIComponent(tipo)}&folio=${encodeURIComponent(obj.folio)}`,
         );
       }
       return res.redirect("/form_tramites");
@@ -92,7 +91,6 @@ app.use("/auth", authRoutes);
 const alumnosRoutes = require("./routes/alumnos");
 app.use("/api/alumnos", alumnosRoutes);
 
-// TURNOS (API)
 const turnosRoutes = require("./routes/turnos");
 app.use("/turnos", turnosRoutes);
 
