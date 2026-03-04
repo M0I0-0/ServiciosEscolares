@@ -1,35 +1,65 @@
 {
-  "reinscripciones": {
-    "titulo": "Reinscripciones",
-    "documentos": [
-      "Comprobante de pago",
-      "Credencial escolar",
-      "CURP",
-      "Formato de reinscripción"
-    ]
-  },
-  "constancia": {
-    "titulo": "Constancia de estudios",
-    "documentos": [
-      "Credencial escolar",
-      "CURP",
-      "Comprobante de pago"
-    ]
-  },
-  "historial": {
-    "titulo": "Historial académico",
-    "documentos": [
-      "Credencial escolar",
-      "Identificación oficial",
-      "Comprobante de pago"
-    ]
-  },
-  "certificados": {
-    "titulo": "Certificados",
+  "inscripciones": {
+    "titulo": "Inscripciones",
     "documentos": [
       "Acta de nacimiento",
       "CURP",
-      "Fotografías tamaño infantil"
+      "Certificado de bachillerato",
+      "Comprobante de pago",
+      "Solicitud de ingreso firmada"
+    ]
+  },
+
+  "reinscripciones": {
+    "titulo": "Reinscripciones",
+    "documentos": [
+      "Comprobante de pago de reinscripción",
+      "Carga académica"
+    ]
+  },
+
+  "constancia": {
+    "titulo": "Constancias",
+    "documentos": [
+      "Identificación oficial (INE)",
+      "Comprobante de pago",
+      "Se enviará a un correo con los datos del alumno: Nombre, Matrícula, carrera, semestre",
+      "Foto tamaño infantil"
+    ]
+  },
+
+  "historial": {
+    "titulo": "Historial Académico",
+    "documentos": [
+      "Comprobante de pago",
+      "Se enviará a un correo con los datos del alumno: Nombre, Matrícula, carrera, semestre",
+      "Vigencia"
+    ]
+  },
+
+  "certificados": {
+    "titulo": "Certificados",
+    "documentos": [
+      "Historial académico",
+      "Comprobante de pago",
+      "Se enviará a un correo con los datos del alumno: Nombre, Matrícula, carrera, semestre"
+    ]
+  },
+
+  "bajas": {
+    "titulo": "Bajas",
+    "documentos": [
+      "Formato de solicitud de baja temporal o definitiva",
+      "Firma de no adeudo en finanzas"
+    ]
+  },
+
+  "cambios-carrera": {
+    "titulo": "Cambios de Carrera",
+    "documentos": [
+      "Oficio de autorización por parte de la coordinación",
+      "Historial académico actualizado",
+      "Validación de materias revalidadas"
     ]
   }
 }
