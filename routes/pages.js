@@ -38,7 +38,7 @@ router.get("/panel_administrador", requireAuth, (req, res) => {
 });
 
 router.get("/vista_admin", requireAuth, (req, res) => {
-  res.sendFile(path.join(__dirname, "..", "Public/pages/vista_admi.html"));
+  res.sendFile(path.join(__dirname, "..", "Public/pages/vista_admin.html"));
 });
 
 router.get("/metricas", requireAuth, (req, res) => {

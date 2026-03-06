@@ -33,7 +33,7 @@
 
     <div class="options">
 
-      <a href="/panel" class="option">
+      <a href="/metricas" class="option">
         <div class="icon">📊</div>
         <div class="label">Panel</div>
       </a>
@@ -49,7 +49,9 @@
 
 
   <!-- BOTON REGRESAR -->
-  <a href="#" class="btn-back">Regresar</a>
+    <form action="/auth/logout" method="POST">
+      <button type="submit" class="btn-back">Cerrar Sesión</button>
+    </form>
 
 </div>
 
