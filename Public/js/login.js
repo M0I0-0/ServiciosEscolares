@@ -61,7 +61,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Admin
         if (data.rol === "admin") {
-          window.location.href = "/panel_admin";
+          window.location.href = "/panel_administrador";
           return;
         }
 
