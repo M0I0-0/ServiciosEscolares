@@ -1,5 +1,6 @@
 const express = require("express");
 const path = require("path");
+const session = require("express-session");
 // const db = require("./DB/db"); // opcional: si solo lo quieres por el log de conexión
 
 const app = express();
@@ -12,6 +13,23 @@ app.use(express.static(path.join(__dirname, "Public")));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
+// ==========================
+// CONFIGURACIÓN DE SESIÓN
+// ==========================
+app.use(session({
+  secret: "secreto_escolar_seguro_123", // Cambia esto por algo secreto
+  resave: false,
+  saveUninitialized: false,
+}));
+
+// Middleware para verificar sesión
+const requireAuth = (req, res, next) => {
+  if (req.session && req.session.usuario) {
+    return next();
+  }
+  res.redirect("/");
+};
+
 // Controllers
 const turnosController = require("./controllers/turnosController");
 
@@ -23,13 +41,13 @@ app.get("/", (req, res) => {
 });
 
 // ✅ Ruta “canónica”
-app.get("/Bienvenidos", (req, res) => {
+app.get("/Bienvenidos", requireAuth, (req, res) => {
   res.sendFile(path.join(__dirname, "Public/pages/Bienvenidos.html"));
 });
 // ✅ Alias (por si quedó en mayúsculas en algún link)
-app.get("/Bienvenidos", (req, res) => res.redirect("/bienvenidos"));
+app.get("/Bienvenidos", requireAuth, (req, res) => res.redirect("/bienvenidos"));
 
-app.get("/Bienvenidos_inscripcion", (req, res) => {
+app.get("/Bienvenidos_inscripcion", requireAuth, (req, res) => {
   res.sendFile(
     path.join(__dirname, "Public/pages/Bienvenidos_inscripcion.html"),
   );
@@ -39,20 +57,20 @@ app.get("/recuperar_contrasena", (req, res) => {
   res.sendFile(path.join(__dirname, "Public/pages/recuperar_contrasena.html"));
 });
 
-app.get("/form_tramites", (req, res) => {
+app.get("/form_tramites", requireAuth, (req, res) => {
   res.sendFile(path.join(__dirname, "Public/pages/form_tramites.html"));
 });
 
-app.get("/panel_personal", (req, res) => {
+app.get("/panel_personal", requireAuth, (req, res) => {
   res.sendFile(path.join(__dirname, "Public/pages/visualizar_personal.html"));
 });
 
-app.get("/panel_admin", (req, res) => {
+app.get("/panel_admin", requireAuth, (req, res) => {
   res.send("Panel Admin (pendiente)");
 });
 
 // ✅ TURNO: crea turno si viene ?tipo= y no viene folio
-app.get("/turno", (req, res) => {
+app.get("/turno", requireAuth, (req, res) => {
   const tipo = (req.query.tipo || "").trim();
   const folio = (req.query.folio || "").trim();
 
