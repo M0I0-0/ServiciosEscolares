@@ -21,6 +21,10 @@ router.get("/recuperar_contrasena", (req, res) => {
   res.sendFile(path.join(__dirname, "..", "Public/pages/recuperar_contrasena.html"));
 });
 
+router.get("/registro", (req, res) => {
+  res.sendFile(path.join(__dirname, "..", "Public/pages/Nuevo_Usuario.html"));
+});
+
 router.get("/form_tramites", requireAuth, (req, res) => {
   res.sendFile(path.join(__dirname, "..", "Public/pages/form_tramites.html"));
 });
@@ -29,8 +33,8 @@ router.get("/panel_personal", requireAuth, (req, res) => {
   res.sendFile(path.join(__dirname, "..", "Public/pages/visualizar_personal.html"));
 });
 
-router.get("/panel_admin", requireAuth, (req, res) => {
-  res.send("Panel Admin (pendiente)");
+router.get("/panel_administrador", requireAuth, (req, res) => {
+  res.sendFile(path.join(__dirname, "..", "Public/pages/vista_admin.html"));
 });
 
 router.get("/vista_admin", requireAuth, (req, res) => {
