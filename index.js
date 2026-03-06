@@ -6,6 +6,7 @@ const authRoutes = require("./routes/auth");
 const alumnosRoutes = require("./routes/alumnos");
 const turnosRoutes = require("./routes/turnos");
 const pagesRoutes = require("./routes/pages");
+const personalRoutes = require("./routes/personal");
 
 const app = express();
 const port = 3000;
@@ -21,6 +22,7 @@ app.use("/", pagesRoutes);
 app.use("/auth", authRoutes);
 app.use("/api/alumnos", alumnosRoutes);
 app.use("/turnos", turnosRoutes);
+app.use("/api/personal", personalRoutes);
 
 // Server
 app.listen(port, () => {
