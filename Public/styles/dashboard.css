@@ -1,0 +1,153 @@
+:root{
+--navy1:#062a59;
+--navy2:#0b3b7a;
+--bone:#f3efe6;
+--text:#1d3f75;
+}
+
+*{
+box-sizing:border-box;
+}
+
+body{
+margin:0;
+font-family:Arial, sans-serif;
+}
+
+/* FONDO */
+.page{
+min-height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+background:radial-gradient(circle at 50% 40%, var(--navy2), var(--navy1));
+position:relative;
+}
+
+/* CONTENEDOR PRINCIPAL */
+.card{
+background:var(--bone);
+padding:40px;
+border-radius:28px;
+width:850px;
+text-align:center;
+box-shadow:0 20px 40px rgba(0,0,0,.25);
+}
+
+/* TITULO */
+.title{
+margin:0 0 30px 0;
+font-size:70px;
+color:var(--text);
+font-weight:700;
+}
+
+/* OPCIONES */
+.options{
+display:flex;
+justify-content:center;
+gap:30px;
+}
+
+/* TARJETAS */
+.option{
+width:280px;
+height:230px;
+
+background:linear-gradient(#e7ebf4,#cfd7e8);
+border-radius:20px;
+
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+
+text-decoration:none;
+color:var(--text);
+
+box-shadow:0 10px 20px rgba(0,0,0,.2);
+transition:.2s;
+}
+
+.option:hover{
+transform:translateY(-4px);
+}
+
+.icon{
+font-size:70px;
+margin-bottom:15px;
+}
+
+.label{
+font-size:40px;
+font-weight:700;
+}
+
+/* BOTON REGRESAR */
+.btn-back{
+position:absolute;
+bottom:30px;
+left:30px;
+
+background:#e74c3c;
+color:white;
+text-decoration:none;
+
+font-size:20px;
+font-weight:700;
+
+padding:12px 30px;
+border-radius:12px;
+
+box-shadow:0 8px 16px rgba(0,0,0,.25);
+}
+
+.btn-back:hover{
+background:#c0392b;
+}
+
+/* USUARIO */
+.user-menu{
+position:absolute;
+top:30px;
+right:40px;
+color:white;
+font-weight:700;
+}
+
+.user-trigger{
+cursor:pointer;
+display:flex;
+align-items:center;
+gap:8px;
+}
+
+.arrow{
+font-size:14px;
+}
+
+/* DROPDOWN */
+.dropdown{
+display:none;
+background:white;
+border-radius:8px;
+margin-top:10px;
+overflow:hidden;
+box-shadow:0 8px 16px rgba(0,0,0,.2);
+}
+
+.dropdown a{
+display:block;
+padding:10px 20px;
+text-decoration:none;
+color:#333;
+font-weight:600;
+}
+
+.dropdown a:hover{
+background:#f2f2f2;
+}
+
+.show{
+display:block;
+}

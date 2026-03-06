@@ -93,6 +93,12 @@ exports.login = (req, res) => {
         return res.json({ ok: false, error: "Credenciales incorrectas" });
       }
 
+      // ✅ Guardar usuario en la sesión
+      req.session.usuario = {
+        correo: row.correo,
+        rol: rol
+      };
+
       // ✅ login correcto + rol
       return res.json({ ok: true, rol });
     });
@@ -285,4 +291,24 @@ exports.resetPassword = (req, res) => {
       actualizar(0);
     },
   );
+};
+
+
+// =====================================
+// LOGOUT
+// =====================================
+exports.logout = (req, res) => {
+  if (req.session) {
+    req.session.destroy((err) => {
+      if (err) {
+        console.log(err);
+        return res.redirect("/");
+      }
+
+      res.clearCookie("connect.sid");
+      res.redirect("/");
+    });
+  } else {
+    res.redirect("/");
+  }
 };

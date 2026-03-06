@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Servicios Escolares | Dashboard</title>
+<link rel="stylesheet" href="/styles/dashboard.css">
+</head>
+
+<body>
+
+<div class="page">
+
+  <!-- USUARIO ADMIN -->
+  <div class="user-menu">
+
+    <div class="user-trigger" onclick="toggleMenu()">
+      <span id="admin-name">Administrador</span>
+      <span class="arrow">▼</span>
+    </div>
+
+    <div class="dropdown" id="dropdown">
+      <a href="#" class="logout">Cerrar sesión</a>
+    </div>
+
+  </div>
+
+
+  <!-- CONTENEDOR PRINCIPAL -->
+  <div class="card">
+
+    <h1 class="title">Dashboard</h1>
+
+    <div class="options">
+
+      <a href="/panel" class="option">
+        <div class="icon">📊</div>
+        <div class="label">Panel</div>
+      </a>
+
+      <a href="/personal" class="option">
+        <div class="icon">👥</div>
+        <div class="label">Personal</div>
+      </a>
+
+    </div>
+
+  </div>
+
+
+  <!-- BOTON REGRESAR -->
+  <a href="#" class="btn-back">Regresar</a>
+
+</div>
+
+
+<script>
+
+function toggleMenu(){
+  const menu = document.getElementById("dropdown");
+  menu.classList.toggle("show");
+}
+
+</script>
+
+</body>
+</html>
