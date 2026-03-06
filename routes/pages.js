@@ -13,7 +13,7 @@ router.get("/bienvenidos", requireAuth, (req, res) => {
   res.sendFile(path.join(__dirname, "..", "Public/pages/Bienvenidos.html"));
 });
 
-router.get("/bienvenidos_inscripcion", requireAuth, (req, res) => {
+router.get("/bienvenidos_inscripcion", (req, res) => {
   res.sendFile(path.join(__dirname, "..", "Public/pages/Bienvenidos_inscripcion.html"));
 });
 
@@ -45,7 +45,7 @@ router.get("/metricas", requireAuth, (req, res) => {
   res.sendFile(path.join(__dirname, "..", "Public/pages/metricas.html"));
 });
 
-router.get("/turno", requireAuth, (req, res) => {
+router.get("/turno", (req, res) => {
 
   const tipo = (req.query.tipo || "").trim();
   const folio = (req.query.folio || "").trim();
