@@ -45,6 +45,10 @@ router.get("/metricas", requireAuth, (req, res) => {
   res.sendFile(path.join(__dirname, "..", "Public/pages/metricas.html"));
 });
 
+router.get("/panel_personal", requireAuth, (req, res) => {
+  res.sendFile(path.join(__dirname, "..", "Public/pages/panel_personal.html"));
+});
+
 router.get("/turno", (req, res) => {
 
   const tipo = (req.query.tipo || "").trim();
