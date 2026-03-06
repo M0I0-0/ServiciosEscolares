@@ -1,3 +1,5 @@
-node_modules
-Servicios_Escolares.db-journal
-Servicios_Escolares.db
+node_modules/
+*.db
+*.db-journal
+DB/*.db
+*.db
