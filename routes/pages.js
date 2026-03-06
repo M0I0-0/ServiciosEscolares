@@ -29,7 +29,7 @@ router.get("/form_tramites", requireAuth, (req, res) => {
   res.sendFile(path.join(__dirname, "..", "Public/pages/form_tramites.html"));
 });
 
-router.get("/panel_personal", requireAuth, (req, res) => {
+router.get("/visualizar_personal", requireAuth, (req, res) => {
   res.sendFile(path.join(__dirname, "..", "Public/pages/visualizar_personal.html"));
 });
 

@@ -55,7 +55,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Personal
         if (data.rol === "personal") {
-          window.location.href = "/panel_personal";
+          window.location.href = "/visualizar_personal";
           return;
         }
 
