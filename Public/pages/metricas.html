@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Panel Métricas</title>
+<title>Métricas del Mes</title>
 <link rel="stylesheet" href="/styles/metricas.css">
 </head>
 
@@ -11,40 +11,43 @@
 
 <div class="page">
 
-    <!-- ADMIN DROPDOWN -->
-    <div class="user-menu">
-
-        <div class="user-trigger" onclick="toggleMenu()">
-            <span id="admin-name">Administrador</span>
-            <span class="arrow">▼</span>
-        </div>
-
-        <div class="dropdown" id="dropdown">
-            <a href="#">Cerrar sesión</a>
-        </div>
-
+    <!-- ADMIN -->
+    <div class="admin-menu">
+        <span>Administrador ▼</span>
     </div>
 
+    <div class="container">
 
-    <!-- TARJETA CENTRAL -->
-    <div class="card">
+        <!-- TARJETA CENTRAL -->
+        <div class="card">
 
-        <h1 class="title">MES</h1>
+            <h1 class="title">MES</h1>
 
-        <!-- GRAFICA -->
-        <div class="chart">
-            <img src="/images/grafica.png" alt="grafica">
+            <div class="chart">
+                <img src="/images/grafica.png" alt="grafica">
+            </div>
+
+            <div class="buttons">
+                <a href="#" class="btn">⬆ Exportar</a>
+                <a href="#" class="btn">↩ Regresar</a>
+            </div>
+
         </div>
 
-        <!-- BOTONES -->
-        <div class="buttons">
 
-            <a href="#" class="btn">
-                ⬆ Exportar
+        <!-- PANEL LATERAL DE METRICAS -->
+        <div class="metrics">
+
+            <a href="#" class="metric-btn">
+                📊 Métricas por personal
             </a>
 
-            <a href="/vista_admin" class="btn">
-                ↩ Regresar
+            <a href="#" class="metric-btn">
+                ⏱ Métricas de tiempos promedio
+            </a>
+
+            <a href="#" class="metric-btn">
+                🔥 Métricas de horas pico
             </a>
 
         </div>
@@ -52,15 +55,6 @@
     </div>
 
 </div>
-
-
-<script>
-
-function toggleMenu(){
-    document.getElementById("dropdown").classList.toggle("show");
-}
-
-</script>
 
 </body>
 </html>
