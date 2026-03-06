@@ -41,6 +41,10 @@ router.get("/vista_admin", requireAuth, (req, res) => {
   res.sendFile(path.join(__dirname, "..", "Public/pages/vista_admi.html"));
 });
 
+router.get("/metricas", requireAuth, (req, res) => {
+  res.sendFile(path.join(__dirname, "..", "Public/pages/metricas.html"));
+});
+
 router.get("/turno", requireAuth, (req, res) => {
 
   const tipo = (req.query.tipo || "").trim();
