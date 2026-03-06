@@ -33,6 +33,10 @@ router.get("/panel_admin", requireAuth, (req, res) => {
   res.send("Panel Admin (pendiente)");
 });
 
+router.get("/vista_admin", requireAuth, (req, res) => {
+  res.sendFile(path.join(__dirname, "..", "Public/pages/vista_admi.html"));
+});
+
 router.get("/turno", requireAuth, (req, res) => {
 
   const tipo = (req.query.tipo || "").trim();
