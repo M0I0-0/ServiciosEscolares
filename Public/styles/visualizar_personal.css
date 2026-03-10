@@ -299,3 +299,30 @@ body {
     font-size: 22px;
   }
 }
+
+/* BOTON CERRAR SESION */
+
+.btn-logout{
+  background:#e74c3c;
+  color:white;
+
+  border:none;
+  border-radius:10px;
+
+  padding:8px 16px;
+  margin-top:8px;
+
+  font-size:14px;
+  font-weight:700;
+
+  cursor:pointer;
+
+  box-shadow:0 6px 12px rgba(0,0,0,0.2);
+
+  transition:all 0.2s ease;
+}
+
+.btn-logout:hover{
+  background:#c0392b;
+  transform:translateY(-1px);
+}

@@ -18,9 +18,9 @@
       Administrador <span class="arrow">▼</span>
     </div>
 
-    <div class="admin-dropdown" id="adminDropdown">
-      <a href="#">Cerrar sesión</a>
-    </div>
+    <form action="/auth/logout" method="POST">
+      <button type="submit" class="btn-logout">Cerrar sesión</button>
+    </form>
 
   </div>
 
