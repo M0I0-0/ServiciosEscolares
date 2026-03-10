@@ -1,69 +1,106 @@
 <!doctype html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Visualizar personal | Servicios Escolares</title>
-    <link rel="stylesheet" href="/styles/visualizar_personal.css" />
-  </head>
-  <body>
-    <div class="page">
-      <main class="card">
-        <div class="topbar">
-          <h1 class="turn-header">En turno</h1>
-          <div class="badge" id="titulo-ventanilla">Ventanilla 1</div>
-        </div>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Visualizar personal | Servicios Escolares</title>
+<link rel="stylesheet" href="/styles/visualizar_personal.css">
+</head>
 
-        <section class="panel">
-          <div class="panel-title">Turno actual</div>
+<body>
 
-          <div class="info-grid">
-            <div class="info-box">
-              <span class="info-label">Folio</span>
-              <span class="info-value" id="turno-actual">--</span>
-            </div>
+<div class="page">
 
-            <div class="info-box">
-              <span class="info-label">Estado</span>
-              <span class="info-value small" id="estado-actual">Sin turno</span>
-            </div>
+  <!-- MENU ADMIN -->
+  <div class="admin-menu">
 
-            <div class="info-box">
-              <span class="info-label">Trámite</span>
-              <span class="info-value small" id="tramite-actual">--</span>
-            </div>
-
-            <div class="info-box">
-              <span class="info-label">Documentos</span>
-              <span class="info-value small">Verificados en ventanilla</span>
-            </div>
-          </div>
-
-          <div class="count-box">
-            <span class="count-label">Tiempo para presentarse</span>
-            <div class="count-value" id="contador">--:--</div>
-          </div>
-        </section>
-
-        <section class="panel next-section">
-          <div class="panel-title">Próximos turnos</div>
-          <ul class="next-list" id="lista-proximos">
-            <li class="next-item">Sin turnos en espera</li>
-          </ul>
-        </section>
-
-        <div class="actions">
-          <button class="btn aceptar" id="btn-aceptar">Llamar</button>
-          <button class="btn rechazar" id="btn-rechazar">Rechazar</button>
-          <button class="btn espera" id="btn-espera">Poner en espera</button>
-        </div>
-
-        <div class="helper-text">
-          El botón principal cambia entre llamar, iniciar atención y finalizar.
-        </div>
-      </main>
+    <div class="admin-trigger" onclick="toggleAdminMenu()">
+      Administrador <span class="arrow">▼</span>
     </div>
 
-    <script src="/js/visualizar_personal.js"></script>
-  </body>
+    <div class="admin-dropdown" id="adminDropdown">
+      <a href="#">Cerrar sesión</a>
+    </div>
+
+  </div>
+
+
+  <main class="card">
+
+    <div class="topbar">
+      <h1 class="turn-header">En turno</h1>
+      <div class="badge" id="titulo-ventanilla">Ventanilla 1</div>
+    </div>
+
+    <section class="panel">
+
+      <div class="panel-title">Turno actual</div>
+
+      <div class="info-grid">
+
+        <div class="info-box">
+          <span class="info-label">Folio</span>
+          <span class="info-value" id="turno-actual">--</span>
+        </div>
+
+        <div class="info-box">
+          <span class="info-label">Estado</span>
+          <span class="info-value small" id="estado-actual">Sin turno</span>
+        </div>
+
+        <div class="info-box">
+          <span class="info-label">Trámite</span>
+          <span class="info-value small" id="tramite-actual">--</span>
+        </div>
+
+        <div class="info-box">
+          <span class="info-label">Documentos</span>
+          <span class="info-value small">Verificados en ventanilla</span>
+        </div>
+
+      </div>
+
+      <div class="count-box">
+        <span class="count-label">Tiempo para presentarse</span>
+        <div class="count-value" id="contador">--:--</div>
+      </div>
+
+    </section>
+
+
+    <section class="panel next-section">
+
+      <div class="panel-title">Próximos turnos</div>
+
+      <ul class="next-list" id="lista-proximos">
+        <li class="next-item">Sin turnos en espera</li>
+      </ul>
+
+    </section>
+
+
+    <div class="actions">
+      <button class="btn aceptar" id="btn-aceptar">Llamar</button>
+      <button class="btn rechazar" id="btn-rechazar">Rechazar</button>
+      <button class="btn espera" id="btn-espera">Poner en espera</button>
+    </div>
+
+    <div class="helper-text">
+      El botón principal cambia entre llamar, iniciar atención y finalizar.
+    </div>
+
+  </main>
+
+</div>
+
+
+<script src="/js/visualizar_personal.js"></script>
+
+<script>
+function toggleAdminMenu(){
+  document.getElementById("adminDropdown").classList.toggle("show");
+}
+</script>
+
+</body>
 </html>
