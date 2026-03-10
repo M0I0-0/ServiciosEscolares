@@ -27,14 +27,12 @@ if (form) {
     if (!matriculaRegex.test(matricula))
       return alert("Matrícula inválida (Ej: A12345678)");
 
-    if (telefono && !telRegex.test(telefono))
-      return alert("Teléfono inválido");
+    if (telefono && !telRegex.test(telefono)) return alert("Teléfono inválido");
 
     if (password.length < 8)
       return alert("La contraseña debe tener mínimo 8 caracteres");
 
-    if (password !== password2)
-      return alert("Las contraseñas no coinciden");
+    if (password !== password2) return alert("Las contraseñas no coinciden");
 
     // ENVIO
     try {
@@ -48,7 +46,7 @@ if (form) {
           matricula,
           correo,
           telefono,
-          password   // 👈 AHORA SI SE ENVÍA
+          password, // 👈 AHORA SI SE ENVÍA
         }),
       });
 
@@ -58,7 +56,6 @@ if (form) {
 
       alert("Alumno registrado correctamente");
       window.location.href = "/index";
-
     } catch (err) {
       alert(err.message);
     }

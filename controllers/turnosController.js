@@ -1,125 +1,357 @@
 const db = require("../DB/db");
 
 const PROMEDIO_MIN = 15;
-const TIEMPO_ATENCION_SEG = 180;
+const PROMEDIO_SEG = PROMEDIO_MIN * 60;
+
+const TIEMPO_LLAMADO_SEG = 180; // 3 min para presentarse
+const VENTANILLAS_TOTALES = 6;
 
 // ===============================
-// TABLAS
+// INIT DB
 // ===============================
-db.run(`
-  CREATE TABLE IF NOT EXISTS turnos (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    folio TEXT NOT NULL UNIQUE,
-    tramite TEXT NOT NULL,
-    correo TEXT,
-    estado TEXT NOT NULL DEFAULT 'EN_ESPERA',
-    creado_en INTEGER NOT NULL,
-    atendido_en INTEGER,
-    cancelado_en INTEGER
-  )
-`);
+db.serialize(() => {
+  db.run(`
+    CREATE TABLE IF NOT EXISTS turnos (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      folio TEXT NOT NULL UNIQUE,
+      tramite TEXT NOT NULL,
+      correo TEXT,
+      estado TEXT NOT NULL DEFAULT 'EN_ESPERA',
+      creado_en INTEGER NOT NULL,
+      orden INTEGER,
 
-db.run(`
-  CREATE TABLE IF NOT EXISTS tramites_estado (
-    tramite TEXT PRIMARY KEY,
-    turno_actual_id INTEGER,
-    actualizado_en INTEGER NOT NULL
-  )
-`);
+      ventanilla INTEGER,
 
-// ✅ Para "poner en espera" (mover al final)
-db.run("ALTER TABLE turnos ADD COLUMN orden INTEGER", () => {});
-db.run("ALTER TABLE turnos ADD COLUMN atendido_fin INTEGER", () => {}); // opcional, por si luego lo usas
+      llamado_en INTEGER,
+      inicio_atencion_en INTEGER,
+      finalizado_en INTEGER,
+      cancelado_en INTEGER,
+      no_presentado_en INTEGER
+    )
+  `);
 
-const pad3 = (n) => String(n).padStart(3, "0");
-// Si quieres sin guion: `A${pad3(nextId)}`
-const generarFolio = (nextId) => `A-${pad3(nextId)}`;
+  db.run(`
+    CREATE TABLE IF NOT EXISTS ventanillas (
+      numero INTEGER PRIMARY KEY,
+      turno_actual_id INTEGER,
+      actualizado_en INTEGER NOT NULL
+    )
+  `);
+
+  for (let i = 1; i <= VENTANILLAS_TOTALES; i++) {
+    db.run(
+      `
+      INSERT OR IGNORE INTO ventanillas (numero, turno_actual_id, actualizado_en)
+      VALUES (?, NULL, ?)
+    `,
+      [i, Date.now()],
+    );
+  }
+
+  // Compatibilidad con estructuras anteriores
+  const columnas = [
+    { nombre: "orden", sql: "ALTER TABLE turnos ADD COLUMN orden INTEGER" },
+    {
+      nombre: "ventanilla",
+      sql: "ALTER TABLE turnos ADD COLUMN ventanilla INTEGER",
+    },
+    {
+      nombre: "llamado_en",
+      sql: "ALTER TABLE turnos ADD COLUMN llamado_en INTEGER",
+    },
+    {
+      nombre: "inicio_atencion_en",
+      sql: "ALTER TABLE turnos ADD COLUMN inicio_atencion_en INTEGER",
+    },
+    {
+      nombre: "finalizado_en",
+      sql: "ALTER TABLE turnos ADD COLUMN finalizado_en INTEGER",
+    },
+    {
+      nombre: "cancelado_en",
+      sql: "ALTER TABLE turnos ADD COLUMN cancelado_en INTEGER",
+    },
+    {
+      nombre: "no_presentado_en",
+      sql: "ALTER TABLE turnos ADD COLUMN no_presentado_en INTEGER",
+    },
+  ];
+
+  db.all(`PRAGMA table_info(turnos)`, (err, rows) => {
+    if (err || !rows) return;
+
+    const existentes = new Set(rows.map((r) => r.name));
+    columnas.forEach((col) => {
+      if (!existentes.has(col.nombre)) {
+        db.run(col.sql, () => {});
+      }
+    });
+  });
+});
 
 // ===============================
 // HELPERS
 // ===============================
-function asegurarTramite(tramite, cb) {
+const pad3 = (n) => String(n).padStart(3, "0");
+
+function getDatePartsMX(ts = Date.now()) {
+  const d = new Date(ts);
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return { yyyy, mm, dd, ymd: `${yyyy}${mm}${dd}` };
+}
+
+function generarFolio(cb) {
+  const now = Date.now();
+  const { yyyy, mm, dd, ymd } = getDatePartsMX(now);
+
+  const inicioDia = new Date(`${yyyy}-${mm}-${dd}T00:00:00`).getTime();
+  const finDia = new Date(`${yyyy}-${mm}-${dd}T23:59:59.999`).getTime();
+
   db.get(
-    "SELECT tramite, turno_actual_id FROM tramites_estado WHERE tramite = ?",
-    [tramite],
+    `
+    SELECT COUNT(*) AS c
+    FROM turnos
+    WHERE creado_en BETWEEN ? AND ?
+  `,
+    [inicioDia, finDia],
     (err, row) => {
       if (err) return cb(err);
-      if (row) return cb(null, row);
+      const consecutivo = (row?.c || 0) + 1;
+      cb(null, `SE-${ymd}-${pad3(consecutivo)}`);
+    },
+  );
+}
 
-      db.run(
-        "INSERT INTO tramites_estado (tramite, turno_actual_id, actualizado_en) VALUES (?, NULL, ?)",
-        [tramite, Date.now()],
-        (insErr) => {
-          if (insErr) return cb(insErr);
-          cb(null, { tramite, turno_actual_id: null });
+function getMaxOrden(cb) {
+  db.get(
+    `SELECT MAX(COALESCE(orden, id)) AS maxOrden FROM turnos`,
+    [],
+    (err, row) => {
+      if (err) return cb(err);
+      cb(null, row?.maxOrden || 0);
+    },
+  );
+}
+
+function liberarVentanilla(numero, cb) {
+  db.run(
+    `
+    UPDATE ventanillas
+    SET turno_actual_id = NULL, actualizado_en = ?
+    WHERE numero = ?
+  `,
+    [Date.now(), numero],
+    (err) => cb?.(err),
+  );
+}
+
+function liberarVentanillaPorTurno(turnoId, cb) {
+  db.get(
+    `
+    SELECT numero
+    FROM ventanillas
+    WHERE turno_actual_id = ?
+  `,
+    [turnoId],
+    (err, row) => {
+      if (err) return cb?.(err);
+      if (!row) return cb?.(null);
+      liberarVentanilla(row.numero, cb);
+    },
+  );
+}
+
+function obtenerTurnoActualVentanilla(ventanilla, cb) {
+  db.get(
+    `
+    SELECT
+      t.id,
+      t.folio,
+      t.tramite,
+      t.correo,
+      t.estado,
+      t.orden,
+      t.ventanilla,
+      t.llamado_en,
+      t.inicio_atencion_en,
+      v.numero AS ventanilla_numero
+    FROM ventanillas v
+    LEFT JOIN turnos t ON t.id = v.turno_actual_id
+    WHERE v.numero = ?
+  `,
+    [ventanilla],
+    (err, row) => {
+      if (err) return cb(err);
+      if (!row || !row.id) return cb(null, null);
+      cb(null, row);
+    },
+  );
+}
+
+function obtenerSiguienteEnEspera(cb) {
+  db.get(
+    `
+    SELECT
+      id,
+      folio,
+      tramite,
+      correo,
+      estado,
+      orden
+    FROM turnos
+    WHERE estado = 'EN_ESPERA'
+    ORDER BY COALESCE(orden, id) ASC
+    LIMIT 1
+  `,
+    [],
+    (err, row) => cb(err, row || null),
+  );
+}
+
+function obtenerProximosEnEspera(limit = 3, excludeId = null, cb) {
+  let sql = `
+    SELECT id, folio, tramite, correo, estado, orden
+    FROM turnos
+    WHERE estado = 'EN_ESPERA'
+  `;
+  const params = [];
+
+  if (excludeId) {
+    sql += ` AND id <> ? `;
+    params.push(excludeId);
+  }
+
+  sql += ` ORDER BY COALESCE(orden, id) ASC LIMIT ? `;
+  params.push(limit);
+
+  db.all(sql, params, (err, rows) => cb(err, rows || []));
+}
+
+function contarAdelante(turno, cb) {
+  const ordenRef = turno.orden ?? turno.id;
+
+  db.get(
+    `
+    SELECT COUNT(*) AS c
+    FROM turnos
+    WHERE estado IN ('LLAMADO', 'EN_ATENCION')
+  `,
+    [],
+    (err1, activos) => {
+      if (err1) return cb(err1);
+
+      db.get(
+        `
+        SELECT COUNT(*) AS c
+        FROM turnos
+        WHERE estado = 'EN_ESPERA'
+          AND COALESCE(orden, id) < ?
+      `,
+        [ordenRef],
+        (err2, espera) => {
+          if (err2) return cb(err2);
+
+          const adelante = (activos?.c || 0) + (espera?.c || 0);
+          cb(null, adelante);
         },
       );
     },
   );
 }
 
-function avanzarAlSiguiente(tramite, cb) {
-  db.get(
-    `SELECT id, folio
-     FROM turnos
-     WHERE tramite = ? AND estado = 'EN_ESPERA'
-     ORDER BY COALESCE(orden, id) ASC
-     LIMIT 1`,
-    [tramite],
-    (err, nextRow) => {
+function calcularExtraPorDemora(cb) {
+  db.all(
+    `
+    SELECT inicio_atencion_en
+    FROM turnos
+    WHERE estado = 'EN_ATENCION'
+      AND inicio_atencion_en IS NOT NULL
+  `,
+    [],
+    (err, rows) => {
       if (err) return cb(err);
 
-      if (!nextRow) {
-        db.run(
-          "UPDATE tramites_estado SET turno_actual_id = NULL, actualizado_en = ? WHERE tramite = ?",
-          [Date.now(), tramite],
-          (upErr) => cb(upErr, null),
-        );
-        return;
+      let extra = 0;
+      const now = Date.now();
+
+      for (const row of rows || []) {
+        const transSeg = Math.floor((now - row.inicio_atencion_en) / 1000);
+        if (transSeg > PROMEDIO_SEG) {
+          const bloquesExtra =
+            Math.floor((transSeg - PROMEDIO_SEG) / PROMEDIO_SEG) + 1;
+          extra += bloquesExtra * 300; // +5 min por bloque excedido
+        }
       }
 
-      db.run(
-        "UPDATE turnos SET estado = 'EN_ATENCION', atendido_en = ? WHERE id = ?",
-        [Date.now(), nextRow.id],
-        (upErr) => {
-          if (upErr) return cb(upErr);
-
-          db.run(
-            "UPDATE tramites_estado SET turno_actual_id = ?, actualizado_en = ? WHERE tramite = ?",
-            [nextRow.id, Date.now(), tramite],
-            (up2Err) => {
-              if (up2Err) return cb(up2Err);
-              cb(null, nextRow);
-            },
-          );
-        },
-      );
+      cb(null, extra);
     },
   );
 }
 
-function asegurarTurnoActual(tramite, cb) {
-  asegurarTramite(tramite, (err, st) => {
-    if (err) return cb(err);
+function procesarLlamadosCaducados(cb) {
+  const limite = Date.now() - TIEMPO_LLAMADO_SEG * 1000;
 
-    if (st.turno_actual_id) {
-      db.get(
-        "SELECT id, folio, estado, atendido_en FROM turnos WHERE id = ?",
-        [st.turno_actual_id],
-        (e2, row) => {
-          if (e2) return cb(e2);
-          if (row && row.estado === "EN_ATENCION") return cb(null, row);
-          return avanzarAlSiguiente(tramite, cb);
-        },
-      );
-    } else {
-      return avanzarAlSiguiente(tramite, cb);
-    }
-  });
+  db.all(
+    `
+    SELECT id, ventanilla
+    FROM turnos
+    WHERE estado = 'LLAMADO'
+      AND llamado_en IS NOT NULL
+      AND llamado_en <= ?
+  `,
+    [limite],
+    (err, rows) => {
+      if (err) return cb?.(err);
+
+      if (!rows || rows.length === 0) return cb?.(null);
+
+      let pendientes = rows.length;
+      let huboError = null;
+
+      rows.forEach((row) => {
+        db.run(
+          `
+          UPDATE turnos
+          SET estado = 'NO_PRESENTADO',
+              no_presentado_en = ?,
+              ventanilla = NULL
+          WHERE id = ?
+        `,
+          [Date.now(), row.id],
+          (e1) => {
+            if (e1 && !huboError) huboError = e1;
+
+            liberarVentanilla(row.ventanilla, (e2) => {
+              if (e2 && !huboError) huboError = e2;
+
+              pendientes -= 1;
+              if (pendientes === 0) cb?.(huboError);
+            });
+          },
+        );
+      });
+    },
+  );
+}
+
+function normalizarAccion(accion) {
+  const a = (accion || "").trim().toLowerCase();
+
+  if (a === "aceptar") return "llamar";
+  if (a === "llamar") return "llamar";
+  if (a === "iniciar") return "iniciar";
+  if (a === "finalizar") return "finalizar";
+  if (a === "rechazar") return "rechazar";
+  if (a === "espera") return "espera";
+
+  return "";
 }
 
 // ===============================
-// POST /turnos/crear  body: { tramite, correo? }
+// POST /turnos/crear
+// body: { tramite, correo? }
 // ===============================
 exports.crearTurno = (req, res) => {
   const tramite = (req.body.tramite || "").trim();
@@ -129,304 +361,482 @@ exports.crearTurno = (req, res) => {
     return res.status(400).json({ ok: false, error: "Falta trámite" });
   }
 
-  db.get("SELECT id FROM turnos ORDER BY id DESC LIMIT 1", [], (err, last) => {
-    if (err) return res.status(500).json({ ok: false, error: "DB error" });
+  generarFolio((folioErr, folio) => {
+    if (folioErr) {
+      console.error(folioErr);
+      return res
+        .status(500)
+        .json({ ok: false, error: "No se pudo generar folio" });
+    }
 
-    const nextId = (last?.id || 0) + 1;
-    const folio = generarFolio(nextId);
-    const creado_en = Date.now();
+    getMaxOrden((ordenErr, maxOrden) => {
+      if (ordenErr) {
+        console.error(ordenErr);
+        return res.status(500).json({ ok: false, error: "DB error" });
+      }
 
-    db.run(
-      `INSERT INTO turnos (folio, tramite, correo, estado, creado_en, orden)
-       VALUES (?, ?, ?, 'EN_ESPERA', ?, ?)`,
-      [folio, tramite, correo, creado_en, nextId],
-      (insErr) => {
-        if (insErr) {
-          console.error(insErr);
-          return res
-            .status(500)
-            .json({ ok: false, error: "No se pudo crear turno" });
-        }
+      const creado_en = Date.now();
+      const orden = maxOrden + 1;
 
-        asegurarTurnoActual(tramite, (e2) => {
-          if (e2) console.error(e2);
-          return res.json({ ok: true, folio, tramite });
-        });
-      },
-    );
+      db.run(
+        `
+        INSERT INTO turnos (
+          folio, tramite, correo, estado, creado_en, orden
+        )
+        VALUES (?, ?, ?, 'EN_ESPERA', ?, ?)
+      `,
+        [folio, tramite, correo, creado_en, orden],
+        (err) => {
+          if (err) {
+            console.error(err);
+            return res.status(500).json({
+              ok: false,
+              error: "No se pudo crear el turno",
+            });
+          }
+
+          return res.json({
+            ok: true,
+            folio,
+            tramite,
+          });
+        },
+      );
+    });
   });
 };
 
 // ===============================
-// GET /turnos/estado?folio=A-001
+// GET /turnos/estado?folio=SE-20260308-001
 // ===============================
 exports.estadoTurno = (req, res) => {
   const folio = (req.query.folio || "").trim();
-  if (!folio) return res.status(400).json({ ok: false });
+  if (!folio) return res.status(400).json({ ok: false, error: "Falta folio" });
 
-  db.get(
-    "SELECT id, folio, tramite, estado, creado_en, atendido_en FROM turnos WHERE folio = ?",
-    [folio],
-    (err, miTurno) => {
-      if (err) return res.status(500).json({ ok: false });
-      if (!miTurno) return res.status(404).json({ ok: false });
+  procesarLlamadosCaducados((e0) => {
+    if (e0) {
+      console.error(e0);
+      return res.status(500).json({ ok: false });
+    }
 
-      asegurarTurnoActual(miTurno.tramite, (e2) => {
-        if (e2) return res.status(500).json({ ok: false });
+    db.get(
+      `
+      SELECT
+        id,
+        folio,
+        tramite,
+        correo,
+        estado,
+        orden,
+        ventanilla,
+        creado_en,
+        llamado_en,
+        inicio_atencion_en,
+        finalizado_en,
+        cancelado_en,
+        no_presentado_en
+      FROM turnos
+      WHERE folio = ?
+    `,
+      [folio],
+      (err, miTurno) => {
+        if (err) return res.status(500).json({ ok: false });
+        if (!miTurno)
+          return res
+            .status(404)
+            .json({ ok: false, error: "No existe el turno" });
 
-        // re-leer por si cambió a EN_ATENCION
-        db.get(
-          "SELECT id, folio, tramite, estado, atendido_en, orden FROM turnos WHERE folio = ?",
-          [folio],
-          (eReload, miTurno2) => {
-            if (eReload) return res.status(500).json({ ok: false });
-            miTurno = miTurno2 || miTurno;
+        contarAdelante(miTurno, (e1, adelante) => {
+          if (e1) return res.status(500).json({ ok: false });
 
-            // próximos adelante = turnos antes que yo, en espera
+          calcularExtraPorDemora((e2, extraDemoraSeg) => {
+            if (e2) return res.status(500).json({ ok: false });
+
             db.all(
-              `SELECT folio
-               FROM turnos
-               WHERE tramite = ?
-                 AND estado = 'EN_ESPERA'
-                 AND COALESCE(orden, id) < COALESCE(?, ?)
-               ORDER BY COALESCE(orden, id) DESC
-               LIMIT 2`,
-              [miTurno.tramite, miTurno.orden, miTurno.id],
+              `
+              SELECT folio
+              FROM turnos
+              WHERE estado = 'EN_ESPERA'
+                AND COALESCE(orden, id) < COALESCE(?, ?)
+              ORDER BY COALESCE(orden, id) DESC
+              LIMIT 2
+            `,
+              [miTurno.orden, miTurno.id],
               (e3, prevs) => {
                 if (e3) return res.status(500).json({ ok: false });
 
-                db.get(
-                  `SELECT COUNT(*) as c
-                   FROM turnos
-                   WHERE tramite = ?
-                     AND estado = 'EN_ESPERA'
-                     AND COALESCE(orden, id) < COALESCE(?, ?)`,
-                  [miTurno.tramite, miTurno.orden, miTurno.id],
-                  (e4, countRow) => {
-                    if (e4) return res.status(500).json({ ok: false });
+                let estimadoSeg = 0;
+                if (miTurno.estado === "EN_ESPERA") {
+                  estimadoSeg =
+                    Math.ceil(adelante / VENTANILLAS_TOTALES) * PROMEDIO_SEG +
+                    extraDemoraSeg;
+                }
 
-                    const delante = countRow?.c || 0;
-                    const estimadoSeg = delante * PROMEDIO_MIN * 60;
+                let restanteSeg = null;
 
-                    let restanteSeg = null;
-                    if (miTurno.estado === "EN_ATENCION") {
-                      const inicio = miTurno.atendido_en || Date.now();
-                      const trans = Math.floor((Date.now() - inicio) / 1000);
-                      restanteSeg = Math.max(0, TIEMPO_ATENCION_SEG - trans);
-                    }
+                if (miTurno.estado === "LLAMADO") {
+                  const inicio = miTurno.llamado_en || Date.now();
+                  const trans = Math.floor((Date.now() - inicio) / 1000);
+                  restanteSeg = Math.max(0, TIEMPO_LLAMADO_SEG - trans);
+                }
 
-                    return res.json({
-                      ok: true,
-                      miTurno: {
-                        folio: miTurno.folio,
-                        tramite: miTurno.tramite,
-                        estado: miTurno.estado,
-                      },
-                      proximos_adelante: (prevs || []).map((x) => x.folio),
-                      estimadoSeg,
-                      restanteSeg,
-                    });
+                return res.json({
+                  ok: true,
+                  miTurno: {
+                    folio: miTurno.folio,
+                    tramite: miTurno.tramite,
+                    correo: miTurno.correo,
+                    estado: miTurno.estado,
+                    ventanilla: miTurno.ventanilla,
                   },
-                );
+                  proximos_adelante: (prevs || []).map((x) => x.folio),
+                  estimadoSeg,
+                  restanteSeg,
+                });
               },
             );
-          },
-        );
-      });
-    },
-  );
-};
-
-// ===============================
-// POST /turnos/cancelar body: { folio }
-// ===============================
-exports.cancelarTurno = (req, res) => {
-  const folio = (req.body.folio || "").trim();
-  if (!folio) return res.status(400).json({ ok: false });
-
-  db.get(
-    "SELECT id, tramite FROM turnos WHERE folio = ?",
-    [folio],
-    (err, row) => {
-      if (err || !row) return res.status(400).json({ ok: false });
-
-      db.run(
-        "UPDATE turnos SET estado = 'CANCELADO', cancelado_en = ? WHERE id = ?",
-        [Date.now(), row.id],
-        (upErr) => {
-          if (upErr) return res.status(500).json({ ok: false });
-
-          asegurarTramite(row.tramite, (e2, st) => {
-            if (!e2 && st?.turno_actual_id === row.id) {
-              avanzarAlSiguiente(row.tramite, (e3) => {
-                if (e3) console.error(e3);
-                return res.json({ ok: true });
-              });
-            } else {
-              return res.json({ ok: true });
-            }
           });
-        },
-      );
-    },
-  );
-};
-
-// ===============================
-// POST /turnos/tick body: { tramite }
-// - si el turno actual ya rebasó 3 min => CANCELADO + avanzar
-// ===============================
-exports.tick = (req, res) => {
-  const tramite = (req.body.tramite || "").trim();
-  if (!tramite) return res.json({ ok: true });
-
-  asegurarTurnoActual(tramite, (err, actual) => {
-    if (err) return res.status(500).json({ ok: false });
-    if (!actual) return res.json({ ok: true });
-
-    const inicio = actual.atendido_en || Date.now();
-    const trans = Math.floor((Date.now() - inicio) / 1000);
-
-    if (trans >= TIEMPO_ATENCION_SEG) {
-      db.run(
-        "UPDATE turnos SET estado = 'CANCELADO', cancelado_en = ? WHERE id = ?",
-        [Date.now(), actual.id],
-        (e2) => {
-          if (e2) console.error(e2);
-          avanzarAlSiguiente(tramite, (e3) => {
-            if (e3) console.error(e3);
-            return res.json({ ok: true, avanzado: true });
-          });
-        },
-      );
-    } else {
-      return res.json({ ok: true, avanzado: false });
-    }
-  });
-};
-
-// ===================================================
-// ✅ PANEL PERSONAL
-// ===================================================
-
-// GET /turnos/personal/cola?tramite=xxx
-exports.colaPersonal = (req, res) => {
-  const tramite = (req.query.tramite || "").trim();
-  if (!tramite)
-    return res.status(400).json({ ok: false, error: "Falta tramite" });
-
-  // asegura que exista turno actual
-  asegurarTurnoActual(tramite, (err) => {
-    if (err) return res.status(500).json({ ok: false });
-
-    db.get(
-      `SELECT id, folio, correo
-       FROM turnos
-       WHERE tramite = ? AND estado = 'EN_ATENCION'
-       ORDER BY COALESCE(orden, id) ASC
-       LIMIT 1`,
-      [tramite],
-      (e1, actual) => {
-        if (e1) return res.status(500).json({ ok: false });
-
-        db.all(
-          `SELECT id, folio, correo
-           FROM turnos
-           WHERE tramite = ? AND estado = 'EN_ESPERA'
-           ORDER BY COALESCE(orden, id) ASC
-           LIMIT 3`,
-          [tramite],
-          (e2, proximos) => {
-            if (e2) return res.status(500).json({ ok: false });
-
-            return res.json({
-              ok: true,
-              actual: actual || null,
-              proximos: proximos || [],
-            });
-          },
-        );
+        });
       },
     );
   });
 };
 
-// POST /turnos/personal/accion
-// body: { tramite, accion }  accion: aceptar | rechazar | espera
-exports.accionPersonal = (req, res) => {
-  const tramite = (req.body.tramite || "").trim();
-  const accion = (req.body.accion || "").trim();
+// ===============================
+// POST /turnos/cancelar
+// body: { folio }
+// ===============================
+exports.cancelarTurno = (req, res) => {
+  const folio = (req.body.folio || "").trim();
+  if (!folio) return res.status(400).json({ ok: false, error: "Falta folio" });
 
-  if (!tramite || !accion) return res.status(400).json({ ok: false });
-
-  // obtener turno actual
   db.get(
-    `SELECT id, folio, estado
-     FROM turnos
-     WHERE tramite = ? AND estado = 'EN_ATENCION'
-     ORDER BY COALESCE(orden, id) ASC
-     LIMIT 1`,
-    [tramite],
-    (err, actual) => {
-      if (err) return res.status(500).json({ ok: false });
-      if (!actual)
-        return res.json({ ok: true, msg: "No hay turno en atención" });
-
-      const avanzar = () => {
-        avanzarAlSiguiente(tramite, (e3) => {
-          if (e3) console.error(e3);
-          return res.json({ ok: true });
-        });
-      };
-
-      if (accion === "aceptar") {
-        db.run(
-          "UPDATE turnos SET estado = 'ATENDIDO', atendido_fin = ? WHERE id = ?",
-          [Date.now(), actual.id],
-          (e2) => {
-            if (e2) return res.status(500).json({ ok: false });
-            return avanzar();
-          },
-        );
-        return;
+    `
+    SELECT id, estado, ventanilla
+    FROM turnos
+    WHERE folio = ?
+  `,
+    [folio],
+    (err, row) => {
+      if (err || !row) {
+        return res
+          .status(400)
+          .json({ ok: false, error: "Turno no encontrado" });
       }
 
-      if (accion === "rechazar") {
-        db.run(
-          "UPDATE turnos SET estado = 'CANCELADO', cancelado_en = ? WHERE id = ?",
-          [Date.now(), actual.id],
-          (e2) => {
-            if (e2) return res.status(500).json({ ok: false });
-            return avanzar();
-          },
-        );
-        return;
+      if (["FINALIZADO", "CANCELADO", "NO_PRESENTADO"].includes(row.estado)) {
+        return res.json({ ok: true });
       }
 
-      if (accion === "espera") {
-        // mover al final: orden = max + 1, estado vuelve a EN_ESPERA
-        db.get(
-          "SELECT MAX(COALESCE(orden, id)) as m FROM turnos WHERE tramite = ?",
-          [tramite],
-          (eMax, rMax) => {
-            if (eMax) return res.status(500).json({ ok: false });
+      db.run(
+        `
+        UPDATE turnos
+        SET estado = 'CANCELADO',
+            cancelado_en = ?,
+            ventanilla = NULL
+        WHERE id = ?
+      `,
+        [Date.now(), row.id],
+        (e1) => {
+          if (e1) return res.status(500).json({ ok: false });
 
-            const nuevoOrden = (rMax?.m || actual.id) + 1;
-
-            db.run(
-              "UPDATE turnos SET estado = 'EN_ESPERA', atendido_en = NULL, orden = ? WHERE id = ?",
-              [nuevoOrden, actual.id],
-              (e2) => {
-                if (e2) return res.status(500).json({ ok: false });
-                return avanzar();
-              },
-            );
-          },
-        );
-        return;
-      }
-
-      return res.status(400).json({ ok: false, error: "Acción inválida" });
+          liberarVentanilla(row.ventanilla, (e2) => {
+            if (e2) console.error(e2);
+            return res.json({ ok: true });
+          });
+        },
+      );
     },
   );
+};
+
+// ===============================
+// POST /turnos/tick
+// body opcional: {}
+// Fuerza procesamiento de llamados vencidos
+// ===============================
+exports.tick = (req, res) => {
+  procesarLlamadosCaducados((err) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ ok: false });
+    }
+
+    return res.json({ ok: true });
+  });
+};
+
+// ===============================
+// GET /turnos/personal/cola?ventanilla=1
+// ===============================
+exports.colaPersonal = (req, res) => {
+  const ventanilla = Number(req.query.ventanilla);
+
+  if (!ventanilla || ventanilla < 1 || ventanilla > VENTANILLAS_TOTALES) {
+    return res.status(400).json({
+      ok: false,
+      error: "Ventanilla inválida",
+    });
+  }
+
+  procesarLlamadosCaducados((e0) => {
+    if (e0) {
+      console.error(e0);
+      return res.status(500).json({ ok: false });
+    }
+
+    obtenerTurnoActualVentanilla(ventanilla, (e1, actual) => {
+      if (e1) return res.status(500).json({ ok: false });
+
+      if (actual) {
+        const armado = { ...actual };
+
+        if (armado.estado === "LLAMADO") {
+          const trans = Math.floor(
+            (Date.now() - (armado.llamado_en || Date.now())) / 1000,
+          );
+          armado.restanteSeg = Math.max(0, TIEMPO_LLAMADO_SEG - trans);
+        }
+
+        return obtenerProximosEnEspera(3, null, (e2, proximos) => {
+          if (e2) return res.status(500).json({ ok: false });
+
+          return res.json({
+            ok: true,
+            ventanilla,
+            actual: armado,
+            proximos,
+          });
+        });
+      }
+
+      obtenerSiguienteEnEspera((e2, preview) => {
+        if (e2) return res.status(500).json({ ok: false });
+
+        obtenerProximosEnEspera(3, preview?.id || null, (e3, proximos) => {
+          if (e3) return res.status(500).json({ ok: false });
+
+          return res.json({
+            ok: true,
+            ventanilla,
+            actual: preview
+              ? {
+                  ...preview,
+                  estado: "EN_ESPERA",
+                  ventanilla,
+                  preview: true,
+                }
+              : null,
+            proximos,
+          });
+        });
+      });
+    });
+  });
+};
+
+// ===============================
+// POST /turnos/personal/accion
+// body: { ventanilla, accion }
+// acciones:
+// - llamar   (alias aceptar)
+// - iniciar
+// - finalizar
+// - rechazar
+// - espera
+// ===============================
+exports.accionPersonal = (req, res) => {
+  const ventanilla = Number(req.body.ventanilla);
+  const accion = normalizarAccion(req.body.accion);
+
+  if (!ventanilla || ventanilla < 1 || ventanilla > VENTANILLAS_TOTALES) {
+    return res.status(400).json({ ok: false, error: "Ventanilla inválida" });
+  }
+
+  if (!accion) {
+    return res.status(400).json({ ok: false, error: "Acción inválida" });
+  }
+
+  procesarLlamadosCaducados((e0) => {
+    if (e0) {
+      console.error(e0);
+      return res.status(500).json({ ok: false });
+    }
+
+    obtenerTurnoActualVentanilla(ventanilla, (e1, actual) => {
+      if (e1) return res.status(500).json({ ok: false });
+
+      // =========================
+      // LLAMAR
+      // =========================
+      if (accion === "llamar") {
+        if (actual) {
+          return res.json({
+            ok: true,
+            msg: "La ventanilla ya tiene un turno activo",
+          });
+        }
+
+        return obtenerSiguienteEnEspera((e2, siguiente) => {
+          if (e2) return res.status(500).json({ ok: false });
+          if (!siguiente) {
+            return res.json({ ok: true, msg: "No hay turnos en espera" });
+          }
+
+          db.run(
+            `
+            UPDATE turnos
+            SET estado = 'LLAMADO',
+                ventanilla = ?,
+                llamado_en = ?,
+                inicio_atencion_en = NULL
+            WHERE id = ?
+          `,
+            [ventanilla, Date.now(), siguiente.id],
+            (e3) => {
+              if (e3) return res.status(500).json({ ok: false });
+
+              db.run(
+                `
+                UPDATE ventanillas
+                SET turno_actual_id = ?, actualizado_en = ?
+                WHERE numero = ?
+              `,
+                [siguiente.id, Date.now(), ventanilla],
+                (e4) => {
+                  if (e4) return res.status(500).json({ ok: false });
+                  return res.json({ ok: true });
+                },
+              );
+            },
+          );
+        });
+      }
+
+      // Las demás acciones requieren turno actual
+      if (!actual) {
+        return res.json({
+          ok: true,
+          msg: "No hay turno activo en esta ventanilla",
+        });
+      }
+
+      // =========================
+      // INICIAR
+      // =========================
+      if (accion === "iniciar") {
+        if (actual.estado !== "LLAMADO") {
+          return res.status(400).json({
+            ok: false,
+            error: "Solo se puede iniciar un turno llamado",
+          });
+        }
+
+        db.run(
+          `
+          UPDATE turnos
+          SET estado = 'EN_ATENCION',
+              inicio_atencion_en = ?
+          WHERE id = ?
+        `,
+          [Date.now(), actual.id],
+          (e2) => {
+            if (e2) return res.status(500).json({ ok: false });
+            return res.json({ ok: true });
+          },
+        );
+        return;
+      }
+
+      // =========================
+      // FINALIZAR
+      // =========================
+      if (accion === "finalizar") {
+        if (actual.estado !== "EN_ATENCION") {
+          return res.status(400).json({
+            ok: false,
+            error: "Solo se puede finalizar un turno en atención",
+          });
+        }
+
+        db.run(
+          `
+          UPDATE turnos
+          SET estado = 'FINALIZADO',
+              finalizado_en = ?,
+              ventanilla = NULL
+          WHERE id = ?
+        `,
+          [Date.now(), actual.id],
+          (e2) => {
+            if (e2) return res.status(500).json({ ok: false });
+
+            liberarVentanilla(ventanilla, (e3) => {
+              if (e3) return res.status(500).json({ ok: false });
+              return res.json({ ok: true });
+            });
+          },
+        );
+        return;
+      }
+
+      // =========================
+      // RECHAZAR
+      // =========================
+      if (accion === "rechazar") {
+        db.run(
+          `
+          UPDATE turnos
+          SET estado = 'CANCELADO',
+              cancelado_en = ?,
+              ventanilla = NULL
+          WHERE id = ?
+        `,
+          [Date.now(), actual.id],
+          (e2) => {
+            if (e2) return res.status(500).json({ ok: false });
+
+            liberarVentanilla(ventanilla, (e3) => {
+              if (e3) return res.status(500).json({ ok: false });
+              return res.json({ ok: true });
+            });
+          },
+        );
+        return;
+      }
+
+      // =========================
+      // ESPERA
+      // =========================
+      if (accion === "espera") {
+        getMaxOrden((e2, maxOrden) => {
+          if (e2) return res.status(500).json({ ok: false });
+
+          db.run(
+            `
+            UPDATE turnos
+            SET estado = 'EN_ESPERA',
+                orden = ?,
+                ventanilla = NULL,
+                llamado_en = NULL,
+                inicio_atencion_en = NULL
+            WHERE id = ?
+          `,
+            [maxOrden + 1, actual.id],
+            (e3) => {
+              if (e3) return res.status(500).json({ ok: false });
+
+              liberarVentanilla(ventanilla, (e4) => {
+                if (e4) return res.status(500).json({ ok: false });
+                return res.json({ ok: true });
+              });
+            },
+          );
+        });
+        return;
+      }
+
+      return res.status(400).json({ ok: false, error: "Acción no soportada" });
+    });
+  });
 };

@@ -1,93 +1,282 @@
-// Lee el trámite desde la URL: /panel_personal?tramite=certificados
 const params = new URLSearchParams(window.location.search);
-const tramite = (params.get("tramite") || "certificados").trim();
+const ventanilla = Number(params.get("ventanilla")) || 1;
 
-const $usuario = document.getElementById("usuario-turno");
-const $t1 = document.getElementById("t1");
-const $t2 = document.getElementById("t2");
-const $t3 = document.getElementById("t3");
+// ===============================
+// DOM
+// ===============================
+const $turnoActual = document.getElementById("turno-actual");
+const $tramiteActual = document.getElementById("tramite-actual");
+const $estadoActual = document.getElementById("estado-actual");
+const $contador = document.getElementById("contador");
+const $listaProximos = document.getElementById("lista-proximos");
 
-const $aceptar = document.getElementById("btn-aceptar");
-const $rechazar = document.getElementById("btn-rechazar");
-const $espera = document.getElementById("btn-espera");
+const $btnAceptar = document.getElementById("btn-aceptar");
+const $btnRechazar = document.getElementById("btn-rechazar");
+const $btnEspera = document.getElementById("btn-espera");
 
-const setText = (el, txt) => {
-  if (!el) return;
-  el.textContent = txt || "—";
-};
+// ===============================
+// STATE
+// ===============================
+let turnoActual = null;
+let restanteLocal = null;
 
-const turnLabel = (t) => {
-  if (!t) return "—";
-  // Folio + correo (si existe)
-  return `${t.folio}${t.correo ? " - " + t.correo : ""}`;
-};
+// ===============================
+// UTILS
+// ===============================
+function fmt(seg) {
+  const s = Math.max(0, Number(seg || 0));
+  const min = Math.floor(s / 60);
+  const sec = s % 60;
+  return `${String(min).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+}
 
+function setText(el, text) {
+  if (el) el.textContent = text;
+}
+
+function estadoBonito(estado) {
+  switch (estado) {
+    case "EN_ESPERA":
+      return "En espera";
+    case "LLAMADO":
+      return "Llamado";
+    case "EN_ATENCION":
+      return "En atención";
+    case "FINALIZADO":
+      return "Finalizado";
+    case "CANCELADO":
+      return "Cancelado";
+    case "NO_PRESENTADO":
+      return "No presentado";
+    default:
+      return estado || "--";
+  }
+}
+
+function limpiarVistaActual() {
+  setText($turnoActual, "--");
+  setText($tramiteActual, "--");
+  setText($estadoActual, "Sin turno");
+  setText($contador, "--:--");
+}
+
+function pintarProximos(proximos = []) {
+  if (!$listaProximos) return;
+
+  $listaProximos.innerHTML = "";
+
+  if (!proximos.length) {
+    const li = document.createElement("li");
+    li.textContent = "Sin turnos en espera";
+    $listaProximos.appendChild(li);
+    return;
+  }
+
+  proximos.forEach((t) => {
+    const li = document.createElement("li");
+    li.textContent = `${t.folio} — ${t.tramite}`;
+    $listaProximos.appendChild(li);
+  });
+}
+
+function actualizarBotonAceptar() {
+  if (!$btnAceptar) return;
+
+  if (!turnoActual) {
+    $btnAceptar.disabled = false;
+    $btnAceptar.textContent = "Llamar";
+    return;
+  }
+
+  if (turnoActual.estado === "EN_ESPERA") {
+    $btnAceptar.disabled = false;
+    $btnAceptar.textContent = "Llamar";
+    return;
+  }
+
+  if (turnoActual.estado === "LLAMADO") {
+    $btnAceptar.disabled = false;
+    $btnAceptar.textContent = "Iniciar atención";
+    return;
+  }
+
+  if (turnoActual.estado === "EN_ATENCION") {
+    $btnAceptar.disabled = false;
+    $btnAceptar.textContent = "Finalizar";
+    return;
+  }
+
+  $btnAceptar.disabled = true;
+  $btnAceptar.textContent = "Aceptar";
+}
+
+function actualizarBotonesSecundarios() {
+  const hayTurno = !!turnoActual;
+
+  if ($btnRechazar) {
+    $btnRechazar.disabled = !hayTurno;
+  }
+
+  if ($btnEspera) {
+    $btnEspera.disabled = !hayTurno;
+  }
+}
+
+function pintarActual(actual) {
+  turnoActual = actual || null;
+
+  if (!turnoActual) {
+    limpiarVistaActual();
+    actualizarBotonAceptar();
+    actualizarBotonesSecundarios();
+    return;
+  }
+
+  setText($turnoActual, turnoActual.folio || "--");
+  setText($tramiteActual, turnoActual.tramite || "--");
+  setText($estadoActual, estadoBonito(turnoActual.estado));
+
+  if (turnoActual.estado === "LLAMADO") {
+    restanteLocal = Number(turnoActual.restanteSeg || 0);
+    setText($contador, fmt(restanteLocal));
+  } else {
+    restanteLocal = null;
+    setText($contador, "--:--");
+  }
+
+  actualizarBotonAceptar();
+  actualizarBotonesSecundarios();
+}
+
+// ===============================
+// API
+// ===============================
 async function cargarCola() {
   try {
-    const res = await fetch(
-      `/turnos/personal/cola?tramite=${encodeURIComponent(tramite)}`,
-    );
+    const res = await fetch(`/turnos/personal/cola?ventanilla=${ventanilla}`);
     const data = await res.json();
 
     if (!data.ok) {
-      setText($usuario, "Error cargando cola");
-      setText($t1, "—");
-      setText($t2, "—");
-      setText($t3, "—");
+      limpiarVistaActual();
+      pintarProximos([]);
       return;
     }
 
-    // Turno actual
-    if (data.actual) {
-      setText($usuario, `En turno: ${turnLabel(data.actual)}`);
-    } else {
-      setText($usuario, "En turno: —");
-    }
-
-    // Próximos 3
-    const p = data.proximos || [];
-    setText($t1, p[0] ? turnLabel(p[0]) : "—");
-    setText($t2, p[1] ? turnLabel(p[1]) : "—");
-    setText($t3, p[2] ? turnLabel(p[2]) : "—");
-  } catch (e) {
-    setText($usuario, "Error de conexión");
-    setText($t1, "—");
-    setText($t2, "—");
-    setText($t3, "—");
+    pintarActual(data.actual || null);
+    pintarProximos(data.proximos || []);
+  } catch (error) {
+    console.error("Error cargando cola:", error);
   }
 }
 
-async function accion(accion) {
+async function enviarAccion(accion) {
   try {
-    await fetch("/turnos/personal/accion", {
+    const res = await fetch("/turnos/personal/accion", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ tramite, accion }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        ventanilla,
+        accion,
+      }),
     });
 
-    // refrescar después de la acción
+    const data = await res.json();
+
+    if (!data.ok) {
+      alert(data.error || "No se pudo realizar la acción");
+      return;
+    }
+
     await cargarCola();
-  } catch (e) {
-    // no rompemos la UI
+  } catch (error) {
+    console.error("Error enviando acción:", error);
+    alert("Error de conexión");
   }
 }
 
-// Botones
-$aceptar?.addEventListener("click", (e) => {
-  e.preventDefault();
-  accion("aceptar");
-});
+// ===============================
+// EVENTS
+// ===============================
+if ($btnAceptar) {
+  $btnAceptar.addEventListener("click", async () => {
+    if (!turnoActual) {
+      await enviarAccion("llamar");
+      return;
+    }
 
-$rechazar?.addEventListener("click", (e) => {
-  e.preventDefault();
-  accion("rechazar");
-});
+    if (turnoActual.estado === "EN_ESPERA") {
+      await enviarAccion("llamar");
+      return;
+    }
 
-$espera?.addEventListener("click", (e) => {
-  e.preventDefault();
-  accion("espera");
-});
+    if (turnoActual.estado === "LLAMADO") {
+      await enviarAccion("iniciar");
+      return;
+    }
 
-// Init + refresco automático
-cargarCola();
-setInterval(cargarCola, 5000);
+    if (turnoActual.estado === "EN_ATENCION") {
+      await enviarAccion("finalizar");
+      return;
+    }
+  });
+}
+
+if ($btnRechazar) {
+  $btnRechazar.addEventListener("click", async () => {
+    if (!turnoActual) return;
+    await enviarAccion("rechazar");
+  });
+}
+
+if ($btnEspera) {
+  $btnEspera.addEventListener("click", async () => {
+    if (!turnoActual) return;
+    await enviarAccion("espera");
+  });
+}
+
+// ===============================
+// TIMER LOCAL PARA LLAMADO
+// ===============================
+setInterval(() => {
+  if (
+    turnoActual &&
+    turnoActual.estado === "LLAMADO" &&
+    restanteLocal !== null
+  ) {
+    restanteLocal = Math.max(0, restanteLocal - 1);
+    setText($contador, fmt(restanteLocal));
+  }
+}, 1000);
+
+// ===============================
+// REFRESH EN VIVO
+// ===============================
+setInterval(async () => {
+  try {
+    await fetch("/turnos/tick", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  } catch (e) {
+    console.error("Error en tick:", e);
+  }
+
+  await cargarCola();
+}, 5000);
+
+// ===============================
+// INIT
+// ===============================
+window.addEventListener("DOMContentLoaded", async () => {
+  const titulo = document.getElementById("titulo-ventanilla");
+  if (titulo) {
+    titulo.textContent = `Ventanilla ${ventanilla}`;
+  }
+
+  await cargarCola();
+});

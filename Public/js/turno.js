@@ -3,13 +3,11 @@
 // ===============================
 const params = new URLSearchParams(window.location.search);
 const tipo = (params.get("tipo") || "").trim();
-const folio = (params.get("folio") || "").trim();
+const folioUrl = (params.get("folio") || "").trim();
 
 // ===============================
 // Back URL según tipo/origen
 // ===============================
-// Si el "tipo" contiene "inscrip" => volver a bienvenidos_inscripcion
-// En caso contrario => volver a form_tramites
 const isInscripcion = tipo.toLowerCase().includes("inscrip");
 const backUrl = isInscripcion ? "/bienvenidos_inscripcion" : "/form_tramites";
 
@@ -26,67 +24,93 @@ const $titulo = document.getElementById("titulo");
 const $lista = document.getElementById("lista-documentos");
 
 // ===============================
+// STATE
+// ===============================
+let pollingEstado = null;
+let countdownInterval = null;
+let restanteLocal = null;
+let estadoActual = null;
+let modoContador = null;
+
+// folio persistente
+let folio = folioUrl || localStorage.getItem("folio_turno_actual") || "";
+
+// ===============================
 // Utils
 // ===============================
-const fmt = (seg) => {
-  const m = Math.floor(seg / 60);
-  const s = seg % 60;
+function fmt(seg) {
+  const total = Math.max(0, Number(seg || 0));
+  const m = Math.floor(total / 60);
+  const s = total % 60;
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-};
+}
 
-const setText = (el, text) => {
+function setText(el, text) {
   if (el) el.textContent = text;
-};
+}
 
-// ===============================
-// Timers
-// ===============================
-let refreshInterval = null;
-let countdownInterval = null;
-
-const stopTimers = () => {
-  if (refreshInterval) clearInterval(refreshInterval);
+function stopCountdown() {
   if (countdownInterval) clearInterval(countdownInterval);
-  refreshInterval = null;
   countdownInterval = null;
-};
+  restanteLocal = null;
+  modoContador = null;
+}
 
-// ===============================
-// UI helpers
-// ===============================
-const pintarProximos = (arr) => {
+function stopPolling() {
+  if (pollingEstado) clearInterval(pollingEstado);
+  pollingEstado = null;
+}
+
+function guardarFolioLocal(valor) {
+  if (valor) {
+    localStorage.setItem("folio_turno_actual", valor);
+  } else {
+    localStorage.removeItem("folio_turno_actual");
+  }
+}
+
+function pintarProximos(arr = []) {
   setText($p1, arr?.[0] || "—");
   setText($p2, arr?.[1] || "—");
-};
+}
 
-// Botón en 2 modos
-const setButtonMode = (mode) => {
+function setButtonMode(mode) {
   if (!$btn) return;
 
   if (mode === "back") {
     $btn.textContent = "Volver a selección de trámite";
-    $btn.onclick = () => (window.location.href = backUrl);
+    $btn.onclick = () => {
+      guardarFolioLocal("");
+      window.location.href = backUrl;
+    };
     return;
   }
 
-  // mode === "cancel"
   $btn.textContent = "Cancelar";
   $btn.onclick = cancelarTurno;
-};
+}
 
-// UI bonita de cancelado
-const mostrarCancelado = () => {
-  stopTimers();
-  setText($contador, "CANCELADO");
-  setText($turno, folio || "—");
-  pintarProximos([]);
-  setButtonMode("back");
-};
+function iniciarPolling() {
+  if (pollingEstado) return;
+
+  pollingEstado = setInterval(async () => {
+    try {
+      await fetch("/turnos/tick", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+    } catch (e) {
+      console.error("Error en tick:", e);
+    }
+
+    await refrescarEstado();
+  }, 5000);
+}
 
 // ===============================
-// DOCUMENTOS (tu parte original)
+// DOCUMENTOS SEGÚN TRÁMITE
 // ===============================
-const cargarDocs = () => {
+function cargarDocs() {
   if (!$titulo || !$lista) return;
 
   if (!tipo) {
@@ -112,10 +136,10 @@ const cargarDocs = () => {
         return;
       }
 
-      $titulo.textContent = tramite.titulo;
+      $titulo.textContent = tramite.titulo || "Documentación necesaria";
       $lista.innerHTML = "";
 
-      tramite.documentos.forEach((doc) => {
+      (tramite.documentos || []).forEach((doc) => {
         const li = document.createElement("li");
         li.textContent = doc;
         $lista.appendChild(li);
@@ -128,10 +152,63 @@ const cargarDocs = () => {
       li.textContent = "No se pudo cargar requisitos.json";
       $lista.appendChild(li);
     });
-};
+}
 
 // ===============================
-// Cancelar (normal)
+// CONTADORES
+// ===============================
+function iniciarCountdown(segundos, modo) {
+  const nuevoRestante = Math.max(0, Number(segundos || 0));
+
+  if (countdownInterval && modoContador === modo) {
+    restanteLocal = nuevoRestante;
+    setText($contador, fmt(restanteLocal));
+    return;
+  }
+
+  stopCountdown();
+  restanteLocal = nuevoRestante;
+  modoContador = modo;
+  setText($contador, fmt(restanteLocal));
+
+  countdownInterval = setInterval(() => {
+    restanteLocal = Math.max(0, (restanteLocal ?? 0) - 1);
+    setText($contador, fmt(restanteLocal));
+  }, 1000);
+}
+
+// ===============================
+// VISTAS FINALES
+// ===============================
+function mostrarCancelado() {
+  stopCountdown();
+  setText($contador, "CANCELADO");
+  setText($turno, folio || "—");
+  pintarProximos([]);
+  setButtonMode("back");
+  guardarFolioLocal("");
+}
+
+function mostrarNoPresentado() {
+  stopCountdown();
+  setText($contador, "NO PRESENTADO");
+  setText($turno, folio || "—");
+  pintarProximos([]);
+  setButtonMode("back");
+  guardarFolioLocal("");
+}
+
+function mostrarFinalizado() {
+  stopCountdown();
+  setText($contador, "ATENDIDO");
+  setText($turno, folio || "—");
+  pintarProximos([]);
+  setButtonMode("back");
+  guardarFolioLocal("");
+}
+
+// ===============================
+// CANCELAR TURNO
 // ===============================
 async function cancelarTurno() {
   if (!folio) return;
@@ -139,36 +216,40 @@ async function cancelarTurno() {
   try {
     const r = await fetch("/turnos/cancelar", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({ folio }),
     });
+
     const data = await r.json();
 
-    if (data && data.ok) {
+    if (data?.ok) {
       mostrarCancelado();
     } else {
-      // si algo falla, mínimo avisamos en contador
       setText($contador, "ERROR");
     }
   } catch (e) {
+    console.error("Error cancelando turno:", e);
     setText($contador, "ERROR");
   }
 }
 
 // ===============================
-// Estado del turno desde backend
+// ESTADO DESDE BACKEND
 // ===============================
-const refrescarEstado = async () => {
+async function refrescarEstado() {
   if (!$turno || !$contador) return;
 
   if (!folio) {
     setText($turno, "—");
     setText($contador, "—");
     pintarProximos([]);
-    setButtonMode("back"); // sin folio, vuelve
+    setButtonMode("back");
     return;
   }
 
+  guardarFolioLocal(folio);
   setText($turno, folio);
 
   try {
@@ -177,74 +258,75 @@ const refrescarEstado = async () => {
     );
     const data = await res.json();
 
-    if (!data.ok) {
+    if (!data?.ok || !data.miTurno) {
       setText($contador, "—");
       pintarProximos([]);
       setButtonMode("back");
       return;
     }
 
-    // Próximos ADELANTE (antes que tú)
+    const miTurno = data.miTurno;
+    estadoActual = miTurno.estado;
+
     pintarProximos(data.proximos_adelante || []);
 
-    // Si cancelado
-    if (data.miTurno.estado === "CANCELADO") {
+    if (miTurno.estado === "CANCELADO") {
       mostrarCancelado();
       return;
     }
 
-    // Si es tu turno (3:00 real)
-    if (data.miTurno.estado === "EN_ATENCION") {
-      setButtonMode("cancel"); // puede cancelar durante atención también
-
-      const restante =
-        typeof data.restanteSeg === "number" ? data.restanteSeg : 180;
-
-      if (countdownInterval) return;
-
-      let seg = restante;
-      setText($contador, fmt(seg));
-
-      countdownInterval = setInterval(async () => {
-        seg = Math.max(0, seg - 1);
-        setText($contador, fmt(seg));
-
-        if (seg === 0) {
-          clearInterval(countdownInterval);
-          countdownInterval = null;
-
-          // al llegar a 0: cancelar + pasar al siguiente
-          await fetch("/turnos/tick", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ tramite: data.miTurno.tramite }),
-          });
-
-          mostrarCancelado();
-          setTimeout(refrescarEstado, 1000);
-        }
-      }, 1000);
-
+    if (miTurno.estado === "NO_PRESENTADO") {
+      mostrarNoPresentado();
       return;
     }
 
-    // EN_ESPERA: estimado (15 min por turno delante)
-    setButtonMode("cancel");
-    const estimado =
-      typeof data.estimadoSeg === "number" ? data.estimadoSeg : 0;
-    setText($contador, fmt(estimado));
-
-    if (!refreshInterval) {
-      refreshInterval = setInterval(refrescarEstado, 10000);
+    if (miTurno.estado === "FINALIZADO") {
+      mostrarFinalizado();
+      return;
     }
+
+    setButtonMode("cancel");
+
+    if (miTurno.estado === "LLAMADO") {
+      const restante =
+        typeof data.restanteSeg === "number" ? data.restanteSeg : 0;
+
+      iniciarCountdown(restante, "LLAMADO");
+      return;
+    }
+
+    if (miTurno.estado === "EN_ATENCION") {
+      stopCountdown();
+      const ventanillaTexto = miTurno.ventanilla
+        ? `PASA A VENTANILLA ${miTurno.ventanilla}`
+        : "PASA A VENTANILLA";
+
+      setText($contador, ventanillaTexto);
+      return;
+    }
+
+    if (miTurno.estado === "EN_ESPERA") {
+      const estimado =
+        typeof data.estimadoSeg === "number" ? data.estimadoSeg : 0;
+
+      iniciarCountdown(estimado, "EN_ESPERA");
+      return;
+    }
+
+    stopCountdown();
+    setText($contador, "—");
   } catch (e) {
+    console.error("Error refrescando estado:", e);
     setText($contador, "—");
   }
-};
+}
 
 // ===============================
-// Init
+// INIT
 // ===============================
-cargarDocs();
-setButtonMode("cancel"); // modo inicial por si todo va bien
-refrescarEstado();
+window.addEventListener("DOMContentLoaded", async () => {
+  cargarDocs();
+  setButtonMode("cancel");
+  await refrescarEstado();
+  iniciarPolling();
+});
