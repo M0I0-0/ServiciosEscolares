@@ -8,7 +8,7 @@ const folioUrl = (params.get("folio") || "").trim();
 // ===============================
 // Back URL según tipo/origen
 // ===============================
-const isInscripcion = tipo.toLowerCase().includes("inscrip");
+const isInscripcion = tipo.toLowerCase().includes("inscrip") && !tipo.toLowerCase().includes("reinscrip");
 const backUrl = isInscripcion ? "/bienvenidos_inscripcion" : "/form_tramites";
 
 // ===============================
