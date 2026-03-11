@@ -1,79 +1,69 @@
 <!doctype html>
 <html lang="es">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Métricas del Mes</title>
-<link rel="stylesheet" href="/styles/metricas.css">
-</head>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Métricas del Mes</title>
+    <link rel="stylesheet" href="/styles/metricas.css" />
+  </head>
 
-<body>
-
-<div class="page">
-
-    <!-- ADMIN -->
-    <div class="admin-menu">
+  <body>
+    <div class="page">
+      <!-- ADMIN -->
+      <div class="admin-menu">
         <span>Administrador ▼</span>
-    </div>
+      </div>
 
-    <div class="container">
-
+      <div class="container">
         <!-- TARJETA CENTRAL -->
         <div class="card">
+          <h1 class="title">MES</h1>
 
-            <h1 class="title">MES</h1>
-
-            <div class="chart">
-                <canvas id="graficaMes"></canvas>
-            </div>
+          <div class="chart">
+            <canvas id="graficaMes"></canvas>
+          </div>
         </div>
 
-        
         <!-- TARJETA CENTRAL -->
         <div class="card">
+          <h1 class="title">Horas pico</h1>
 
-            <h1 class="title">Horas pico</h1>
-
-            <div class="chart">
-                <canvas id="graficaHoras"></canvas>
-            </div>
+          <div class="chart">
+            <canvas id="graficaHoras"></canvas>
+          </div>
         </div>
-        
+
         <!-- TARJETA CENTRAL -->
         <div class="card">
+          <h1 class="title">Personal</h1>
 
-            <h1 class="title">Personal</h1>
-
-            <div class="chart">
-                <canvas id="graficaPersonal"></canvas>
-            </div>
+          <div class="chart">
+            <canvas id="graficaPersonal"></canvas>
+          </div>
         </div>
-        
+
         <!-- TARJETA CENTRAL -->
         <div class="card">
+          <h1 class="title">Horas promedio</h1>
 
-            <h1 class="title">Horas promedio</h1>
-
-            <div class="chart">
-                <canvas id="graficaTiempo"></canvas>
-            </div>
+          <div class="chart">
+            <canvas id="graficaTiempo"></canvas>
+          </div>
         </div>
 
         <!-- PANEL LATERAL DE METRICAS -->
         <div class="metrics">
-            <div class="buttons">
-                <a href="#" class="btn">⬆ Exportar</a>
-                <a href="/vista_admin" class="btn">↩ Regresar</a>
-            </div>
+          <div class="buttons">
+            <a href="/api/metricas/exportar-pdf" class="btn">⬆ Exportar</a>
+            <a href="/vista_admin" class="btn">↩ Regresar</a>
+          </div>
         </div>
-
+      </div>
     </div>
-
-</div>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="/js/MetricaMensual.js"></script>
-<script src="/js/MetricaHora.js"></script>
-<script src="/js/MetricasPersonal.js"></script>
-<script src="/js/MetricasTiempo.js"></script>
-</body>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/js/MetricaMensual.js"></script>
+    <script src="/js/MetricaHora.js"></script>
+    <script src="/js/MetricasPersonal.js"></script>
+    <script src="/js/MetricasTiempo.js"></script>
+  </body>
 </html>
