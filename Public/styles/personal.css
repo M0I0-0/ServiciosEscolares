@@ -80,7 +80,13 @@ body{
   color:var(--text);
   border-bottom:1px solid var(--line);
 }
+.row{
+  cursor:pointer;
+}
 
+.row.selected{
+  background-color:#dbe6f7;
+}
 .row:last-child{
   border-bottom:none;
 }
