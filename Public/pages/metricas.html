@@ -24,38 +24,56 @@
             <h1 class="title">MES</h1>
 
             <div class="chart">
+                <canvas id="graficaMes"></canvas>
+            </div>
+        </div>
+
+        
+        <!-- TARJETA CENTRAL -->
+        <div class="card">
+
+            <h1 class="title">Horas pico</h1>
+
+            <div class="chart">
                 <canvas id="graficaHoras"></canvas>
             </div>
+        </div>
+        
+        <!-- TARJETA CENTRAL -->
+        <div class="card">
 
+            <h1 class="title">Personal</h1>
+
+            <div class="chart">
+                <canvas id="graficaPersonal"></canvas>
+            </div>
+        </div>
+        
+        <!-- TARJETA CENTRAL -->
+        <div class="card">
+
+            <h1 class="title">Horas promedio</h1>
+
+            <div class="chart">
+                <canvas id="graficaTiempo"></canvas>
+            </div>
+        </div>
+
+        <!-- PANEL LATERAL DE METRICAS -->
+        <div class="metrics">
             <div class="buttons">
                 <a href="#" class="btn">⬆ Exportar</a>
                 <a href="/vista_admin" class="btn">↩ Regresar</a>
             </div>
-
-        </div>
-
-
-        <!-- PANEL LATERAL DE METRICAS -->
-        <div class="metrics">
-
-            <a href="#" class="metric-btn">
-                📊 Métricas por personal
-            </a>
-
-            <a href="#" class="metric-btn">
-                ⏱ Métricas de tiempos promedio
-            </a>
-
-            <a href="#" class="metric-btn">
-                🔥 Métricas de horas pico
-            </a>
-
         </div>
 
     </div>
 
 </div>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="/js/MetricaMensual.js"></script>
 <script src="/js/MetricaHora.js"></script>
+<script src="/js/MetricasPersonal.js"></script>
+<script src="/js/MetricasTiempo.js"></script>
 </body>
 </html>
