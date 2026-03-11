@@ -55,7 +55,7 @@ if (form) {
       if (!res.ok) throw new Error(json.error || "Error");
 
       alert("Alumno registrado correctamente");
-      window.location.href = "/index";
+      window.location.href = "/";
     } catch (err) {
       alert(err.message);
     }
