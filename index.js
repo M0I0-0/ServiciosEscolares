@@ -7,6 +7,7 @@ const alumnosRoutes = require("./routes/alumnos");
 const turnosRoutes = require("./routes/turnos");
 const pagesRoutes = require("./routes/pages");
 const personalRoutes = require("./routes/personal");
+const metricasRoutes = require("./routes/metricas");
 
 const app = express();
 const port = 3000;
@@ -23,6 +24,7 @@ app.use("/auth", authRoutes);
 app.use("/api/alumnos", alumnosRoutes);
 app.use("/turnos", turnosRoutes);
 app.use("/api/personal", personalRoutes);
+app.use("/api/metricas", metricasRoutes);
 
 // Server
 app.listen(port, () => {
