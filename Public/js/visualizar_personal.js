@@ -1,5 +1,5 @@
 const params = new URLSearchParams(window.location.search);
-const ventanilla = Number(params.get("ventanilla")) || 1;
+let ventanilla = Number(params.get("ventanilla")) || null;
 
 // ===============================
 // DOM
@@ -149,10 +149,34 @@ function pintarActual(actual) {
 }
 
 // ===============================
+// RESOLVER VENTANILLA DESDE SESIÓN
+// ===============================
+async function resolverVentanilla() {
+  if (ventanilla) return ventanilla;
+
+  try {
+    const res = await fetch("/turnos/personal/mi-ventanilla");
+    const data = await res.json();
+
+    if (data.ok && data.ventanilla) {
+      ventanilla = Number(data.ventanilla);
+      return ventanilla;
+    }
+  } catch (error) {
+    console.error("Error resolviendo ventanilla:", error);
+  }
+
+  ventanilla = 1;
+  return ventanilla;
+}
+
+// ===============================
 // API
 // ===============================
 async function cargarCola() {
   try {
+    await resolverVentanilla();
+
     const res = await fetch(`/turnos/personal/cola?ventanilla=${ventanilla}`);
     const data = await res.json();
 
@@ -171,6 +195,8 @@ async function cargarCola() {
 
 async function enviarAccion(accion) {
   try {
+    await resolverVentanilla();
+
     const res = await fetch("/turnos/personal/accion", {
       method: "POST",
       headers: {
@@ -218,7 +244,6 @@ if ($btnAceptar) {
 
     if (turnoActual.estado === "EN_ATENCION") {
       await enviarAccion("finalizar");
-      return;
     }
   });
 }
@@ -273,6 +298,8 @@ setInterval(async () => {
 // INIT
 // ===============================
 window.addEventListener("DOMContentLoaded", async () => {
+  await resolverVentanilla();
+
   const titulo = document.getElementById("titulo-ventanilla");
   if (titulo) {
     titulo.textContent = `Ventanilla ${ventanilla}`;

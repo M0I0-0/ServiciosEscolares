@@ -840,3 +840,59 @@ exports.accionPersonal = (req, res) => {
     });
   });
 };
+
+// ===============================
+// GET /turnos/mio-activo
+// ===============================
+exports.miTurnoActivo = (req, res) => {
+  const usuario = req.session?.usuario;
+
+  if (!usuario) {
+    return res.status(401).json({
+      ok: false,
+      error: "No autenticado",
+    });
+  }
+
+  const correo = String(
+    usuario.correo || usuario.email || usuario.usuario || "",
+  )
+    .trim()
+    .toLowerCase();
+
+  if (!correo) {
+    return res.json({
+      ok: true,
+      turno: null,
+    });
+  }
+
+  db.get(
+    `
+    SELECT
+      folio,
+      tramite,
+      estado
+    FROM turnos
+    WHERE LOWER(correo) = ?
+      AND estado IN ('EN_ESPERA', 'LLAMADO', 'EN_ATENCION')
+    ORDER BY creado_en DESC
+    LIMIT 1
+    `,
+    [correo],
+    (err, row) => {
+      if (err) {
+        console.error("Error consultando turno activo:", err);
+        return res.status(500).json({
+          ok: false,
+          error: "Error consultando turno activo",
+        });
+      }
+
+      return res.json({
+        ok: true,
+        turno: row || null,
+      });
+    },
+  );
+};

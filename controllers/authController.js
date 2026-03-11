@@ -33,6 +33,24 @@ transporter.verify((err) => {
 const BASE_URL = "http://localhost:3000";
 
 // =====================================
+// HELPERS
+// =====================================
+function obtenerNumeroVentanilla(correo) {
+  const c = String(correo || "")
+    .trim()
+    .toLowerCase();
+
+  if (c === "vent1@gmail.com") return 1;
+  if (c === "vent2@gmail.com") return 2;
+  if (c === "vent3@gmail.com") return 3;
+  if (c === "vent4@gmail.com") return 4;
+  if (c === "vent5@gmail.com") return 5;
+  if (c === "vent6@gmail.com") return 6;
+
+  return null;
+}
+
+// =====================================
 // CREAR TABLA PASSWORD_RESETS
 // =====================================
 db.run(`
@@ -44,14 +62,13 @@ db.run(`
     used INTEGER DEFAULT 0
   )
 `);
-// =====================================
-// LOGIN
-// =====================================
+
 // =====================================
 // LOGIN (con rol)
 // =====================================
 exports.login = (req, res) => {
-  const { correo, password } = req.body;
+  const correo = (req.body.correo || "").trim().toLowerCase();
+  const password = (req.body.password || "").trim();
 
   if (!correo || !password) {
     return res.json({ ok: false, error: "Faltan datos" });
@@ -85,22 +102,24 @@ exports.login = (req, res) => {
         return res.json({ ok: false, error: "Error del servidor" });
       }
 
-      // no existe en esta tabla -> seguir buscando
       if (!row) return buscar(i + 1);
 
-      // existe pero contraseña incorrecta
-      if (row.contrasena !== password) {
+      if ((row.contrasena || "").trim() !== password) {
         return res.json({ ok: false, error: "Credenciales incorrectas" });
       }
 
-      // ✅ Guardar usuario en la sesión
       req.session.usuario = {
         correo: row.correo,
-        rol: rol
+        rol,
+        ventanilla:
+          rol === "personal" ? obtenerNumeroVentanilla(row.correo) : null,
       };
 
-      // ✅ login correcto + rol
-      return res.json({ ok: true, rol });
+      return res.json({
+        ok: true,
+        rol,
+        ventanilla: req.session.usuario.ventanilla,
+      });
     });
   };
 
@@ -174,7 +193,7 @@ exports.forgotPassword = (req, res) => {
           console.error("❌ Error enviando correo:", e);
         }
 
-        return redirectOk(); // SIEMPRE redirige
+        return redirectOk();
       },
     );
   };
@@ -215,7 +234,6 @@ exports.showResetForm = (req, res) => {
         );
       }
 
-      // ✅ Token válido: mostrar formulario
       return res.sendFile(
         path.join(__dirname, "..", "Public", "pages", "reset_password.html"),
       );
@@ -292,7 +310,6 @@ exports.resetPassword = (req, res) => {
     },
   );
 };
-
 
 // =====================================
 // LOGOUT
